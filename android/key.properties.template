@@ -1,0 +1,7 @@
+# TEMPLATE - Copy this to key.properties and fill in your actual values
+# DO NOT commit key.properties to git!
+
+storePassword=YOUR_KEYSTORE_PASSWORD_HERE
+keyPassword=YOUR_KEY_PASSWORD_HERE
+keyAlias=burger-app
+storeFile=app/burger-app-key.jks
