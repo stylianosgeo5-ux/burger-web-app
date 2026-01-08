@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Open Orders Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .launcher {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: #ff6b35;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.4);
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .instructions h3 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="launcher">
+        <h1>🍔 Orders Dashboard</h1>
+        <p>Click the button below to open the orders management website in your browser.</p>
+        <a href="index.html" class="btn" target="_blank">Open Dashboard</a>
+        
+        <div class="instructions">
+            <h3>📝 Quick Start:</h3>
+            <ol>
+                <li><strong>Place an order</strong> in the mobile app</li>
+                <li><strong>Pull orders file</strong> - Double-click <code>pull_orders.bat</code> in this folder</li>
+                <li><strong>Open Dashboard</strong> - Click button above</li>
+                <li><strong>Load File</strong> - Click "📁 Load File" button and select <code>burger_orders.json</code></li>
+            </ol>
+            
+            <h3>💡 Alternative Method:</h3>
+            <p>Open PowerShell here and run:</p>
+            <code style="display:block; background:#333; color:#0f0; padding:10px; border-radius:5px; margin:10px 0;">
+                adb pull /sdcard/Download/burger_orders.json .
+            </code>
+            
+            <h3>🎯 Dashboard Features:</h3>
+            <ul>
+                <li>📊 Real-time statistics</li>
+                <li>🔍 Search and filter orders</li>
+                <li>📁 Load orders from file</li>
+                <li>🗑️ Delete individual or all orders</li>
+                <li>📥 Export orders to JSON</li>
+                <li>🔄 Auto-refresh every 5 seconds</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

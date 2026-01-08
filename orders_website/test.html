@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Orders API Test</h1>
+    <button onclick="testAPI()">Load Orders</button>
+    <div id="result" style="margin-top: 20px; padding: 20px; background: #f0f0f0;"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/orders');
+                resultDiv.innerHTML = `<strong>Status:</strong> ${response.status}<br><br>`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML += `<strong>Orders Count:</strong> ${data.length}<br><br>`;
+                    resultDiv.innerHTML += `<strong>Raw Data:</strong><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML += `<strong>Error:</strong> ${response.statusText}`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<strong>Error:</strong> ${e.message}`;
+            }
+        }
+        
+        // Auto-load on page load
+        window.onload = testAPI;
+    </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2026-01-09 00:47:32.384",
+    "burgerOrders": [
+      {
+        "ingredients": {
+          "Mayo": true,
+          "Ketchup": true,
+          "Lettuce": true,
+          "Tomato": true,
+          "Pickle Cucumber": true,
+          "Onion": true,
+          "Bacon": true,
+          "Egg": true,
+          "Beef Patty": true
+        }
+      }
+    ],
+    "friesCount": 0,
+    "colaCount": 0,
+    "fantaCount": 0,
+    "waterCount": 0,
+    "totalPrice": 0,
+    "originalPrice": 7.99,
+    "discountAmount": 7.99,
+    "discountCode": "1",
+    "paymentMethod": "Cash on Delivery",
+    "userName": "styl",
+    "userEmail": "hxhx@gmail.com",
+    "userPhone": "98686868",
+    "fulfilled": true,
+    "deletedAt": "2026-01-08T22:47:43.378Z"
+  }
+]
