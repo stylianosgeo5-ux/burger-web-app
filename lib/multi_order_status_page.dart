@@ -17,7 +17,7 @@ class MultiOrderStatusPage extends StatefulWidget {
 class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
   int _selectedOrderIndex = 0;
   Timer? _syncTimer;
-  static String get serverUrl => kIsWeb ? 'http://192.168.10.6:8000' : 'http://10.0.2.2:8000';
+  static String get serverUrl => 'https://burger-backend-rxwl.onrender.com';
   List<Map<String, dynamic>> _localOrders = [];
 
   @override

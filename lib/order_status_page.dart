@@ -24,7 +24,7 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
   bool _isPreparing = false;
   bool _isCooked = false;
   bool _isFulfilled = false;
-  static String get serverUrl => kIsWeb ? 'http://192.168.10.6:8000' : 'http://10.0.2.2:8000';
+  static String get serverUrl => 'https://burger-backend-rxwl.onrender.com';
 
   @override
   void initState() {

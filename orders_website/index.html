@@ -643,7 +643,7 @@
                     // Calculate the actual index in the array (displayed in reverse)
                     const actualIndex = freshOrders.length - 1 - index;
                     
-                    const response = await fetch(`http://localhost:8000/api/orders/${actualIndex}/confirm`, {
+                    const response = await fetch(`https://burger-backend-rxwl.onrender.com/api/orders/${actualIndex}/confirm`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
@@ -776,7 +776,7 @@
                     // Calculate the actual index in the array (displayed in reverse)
                     const actualIndex = freshOrders.length - 1 - index;
                     
-                    const response = await fetch(`http://localhost:8000/api/orders/${actualIndex}/cooked`, {
+                    const response = await fetch(`https://burger-backend-rxwl.onrender.com/api/orders/${actualIndex}/cooked`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',

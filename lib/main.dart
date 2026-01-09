@@ -178,8 +178,8 @@ class OrdersHistory {
 
   List<Map<String, dynamic>> allOrders = [];
   
-  // For web: use localhost, for Android emulator: use 10.0.2.2
-  static String get serverUrl => kIsWeb ? 'http://192.168.10.6:8000' : 'http://10.0.2.2:8000';
+  // Production backend URL
+  static String get serverUrl => 'https://burger-backend-rxwl.onrender.com';
 
   Future<void> addOrder(Map<String, dynamic> order) async {
     allOrders.add(order);
