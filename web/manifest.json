@@ -1,6 +1,6 @@
 {
-    "name": "burger_app",
-    "short_name": "burger_app",
+    "name": "burgercy.com",
+    "short_name": "burgercy.com",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

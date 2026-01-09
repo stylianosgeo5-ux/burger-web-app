@@ -1,5 +1,5 @@
 // Service Worker for Google Maps Caching
-const CACHE_NAME = 'burger-app-map-cache-v1';
+const CACHE_NAME = 'burgercy-map-cache-v1';
 const MAPS_CACHE = 'google-maps-tiles-v1';
 
 // Cache Google Maps tiles and resources

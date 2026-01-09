@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: burger-app-backend
+    name: burgercy-backend
     env: node
     buildCommand: npm install
     startCommand: node server.js

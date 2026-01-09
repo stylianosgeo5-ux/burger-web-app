@@ -1,6 +1,6 @@
-# Deploy Your Burger App Publicly
+# Deploy burgercy.com Publicly
 
-This guide will help you make your burger app accessible from any phone.
+This guide will help you make burgercy.com accessible from any phone.
 
 ## Quick Option: Using Render (Free & Easy)
 
@@ -20,13 +20,13 @@ This guide will help you make your burger app accessible from any phone.
    - Click "New +" → "Web Service"
    - Connect your GitHub repository
    - Configure:
-     - **Name**: burger-app-backend
+     - **Name**: burgercy-backend
      - **Root Directory**: `orders_website`
      - **Build Command**: `npm install`
      - **Start Command**: `node server.js`
      - **Plan**: Free
 
-4. **Deploy** - Render will give you a URL like: `https://burger-app-backend.onrender.com`
+4. **Deploy** - Render will give you a URL like: `https://burgercy-backend.onrender.com`
 
 ### Step 2: Update Flutter Web App
 
@@ -35,7 +35,7 @@ Update the server URL in your Flutter app to use the Render URL:
 1. Edit `lib/main.dart` line 167:
    ```dart
    static String get serverUrl => kIsWeb 
-     ? 'https://burger-app-backend.onrender.com' 
+     ? 'https://burgercy-backend.onrender.com' 
      : 'http://10.0.2.2:8000';
    ```
 

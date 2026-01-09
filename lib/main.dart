@@ -213,7 +213,7 @@ class BurgerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Burger Ordering App',
+      title: 'burgercy.com',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
@@ -873,7 +873,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('🍔 Burger Ordering'),
+        title: const Text('🍔 burgercy.com'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),

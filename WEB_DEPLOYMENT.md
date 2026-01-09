@@ -1,6 +1,6 @@
 # 🌐 Web Deployment Guide
 
-## Your burger app has been built for web!
+## burgercy.com has been built for web!
 
 The web files are located in: `build/web/`
 
