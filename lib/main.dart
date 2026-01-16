@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'order_status_page.dart';
 import 'multi_order_status_page.dart';
 import 'auth_page.dart';
+import 'update_checker.dart';
 
 // Navigation bar widget
 class AppNavigationBar extends StatelessWidget {
@@ -108,6 +109,12 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
     _checkAuthentication();
   }
 
+  @override
+  void dispose() {
+    UpdateChecker.stopChecking();
+    super.dispose();
+  }
+
   Future<void> _checkAuthentication() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -128,6 +135,8 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
 
     if (_isAuthenticated) {
       await _loadOrdersFromServer();
+      // Start checking for updates
+      UpdateChecker.startChecking(context);
     }
   }
 
