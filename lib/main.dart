@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'order_status_page.dart';
 import 'multi_order_status_page.dart';
+import 'auth_page.dart';
 
 // Navigation bar widget
 class AppNavigationBar extends StatelessWidget {
@@ -44,13 +45,20 @@ class AppNavigationBar extends StatelessWidget {
                   color: selected ? Colors.orange : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: selected
-                      ? [BoxShadow(color: Colors.orange.withOpacity(0.12), blurRadius: 8, offset: Offset(0, 2))]
+                      ? [
+                          BoxShadow(
+                              color: Colors.orange.withOpacity(0.12),
+                              blurRadius: 8,
+                              offset: Offset(0, 2))
+                        ]
                       : [],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(tab.icon, color: selected ? Colors.white : Colors.orange, size: 22),
+                    Icon(tab.icon,
+                        color: selected ? Colors.white : Colors.orange,
+                        size: 22),
                     const SizedBox(height: 2),
                     Text(
                       tab.label,
@@ -79,7 +87,8 @@ class _NavTab {
 
 class MainNavigationController extends StatefulWidget {
   @override
-  State<MainNavigationController> createState() => _MainNavigationControllerState();
+  State<MainNavigationController> createState() =>
+      _MainNavigationControllerState();
 }
 
 class _MainNavigationControllerState extends State<MainNavigationController> {
@@ -88,6 +97,102 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
   String _userName = '';
   String _userEmail = '';
   String _userPhone = '';
+  String? _authToken;
+  String? _userId;
+  bool _isAuthenticated = false;
+  bool _isCheckingAuth = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final userId = prefs.getString('user_id');
+    final userName = prefs.getString('user_name');
+    final userEmail = prefs.getString('user_email');
+    final userPhone = prefs.getString('user_phone');
+
+    setState(() {
+      _authToken = token;
+      _userId = userId;
+      _userName = userName ?? '';
+      _userEmail = userEmail ?? '';
+      _userPhone = userPhone ?? '';
+      _isAuthenticated = token != null;
+      _isCheckingAuth = false;
+    });
+
+    if (_isAuthenticated) {
+      await _loadOrdersFromServer();
+    }
+  }
+
+  Future<void> _loadOrdersFromServer() async {
+    if (_authToken == null) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('${OrdersHistory.serverUrl}/api/user/orders'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> orders = json.decode(response.body);
+        setState(() {
+          _allOrders = orders.cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (e) {
+      print('Error loading orders from server: $e');
+    }
+  }
+
+  Future<void> _handleAuthSuccess(
+      String token, Map<String, dynamic> user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    await prefs.setString('user_id', user['id']);
+    await prefs.setString('user_name', user['name']);
+    await prefs.setString('user_email', user['email']);
+    await prefs.setString('user_phone', user['phone']);
+
+    setState(() {
+      _authToken = token;
+      _userId = user['id'];
+      _userName = user['name'];
+      _userEmail = user['email'];
+      _userPhone = user['phone'];
+      _isAuthenticated = true;
+    });
+
+    await _loadOrdersFromServer();
+  }
+
+  Future<void> _handleLogout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_id');
+    await prefs.remove('user_name');
+    await prefs.remove('user_email');
+    await prefs.remove('user_phone');
+
+    setState(() {
+      _authToken = null;
+      _userId = null;
+      _userName = '';
+      _userEmail = '';
+      _userPhone = '';
+      _isAuthenticated = false;
+      _allOrders = [];
+    });
+  }
 
   void _onNavTap(int idx) {
     setState(() {
@@ -100,20 +205,36 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       _allOrders.add(order);
       _selectedIndex = 2; // Go to status
     });
+    _loadOrdersFromServer(); // Reload from server
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading screen while checking authentication
+    if (_isCheckingAuth) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.orange),
+        ),
+      );
+    }
+
+    // Show auth page if not authenticated
+    if (!_isAuthenticated) {
+      return AuthPage(
+        onAuthSuccess: _handleAuthSuccess,
+      );
+    }
+
     Widget page;
     if (_selectedIndex == 0) {
       page = HomePage(
         onOrderTap: () => setState(() => _selectedIndex = 1),
+        userName: _userName,
+        userEmail: _userEmail,
+        onLogout: _handleLogout,
         onUserInfoUpdate: (name, email, phone) {
-          setState(() {
-            _userName = name;
-            _userEmail = email;
-            _userPhone = phone;
-          });
+          // Not needed anymore since we use auth
         },
       );
     } else if (_selectedIndex == 1) {
@@ -122,6 +243,8 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
         userName: _userName,
         userEmail: _userEmail,
         userPhone: _userPhone,
+        authToken: _authToken,
+        userId: _userId,
       );
     } else {
       page = MultiOrderStatusPage(orders: _allOrders);
@@ -177,7 +300,7 @@ class OrdersHistory {
   OrdersHistory._internal();
 
   List<Map<String, dynamic>> allOrders = [];
-  
+
   // Production backend URL
   static String get serverUrl => 'https://burger-backend-rxwl.onrender.com';
 
@@ -225,304 +348,29 @@ class BurgerApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   final VoidCallback? onOrderTap;
-  final void Function(String name, String email, String phone)? onUserInfoUpdate;
-  const HomePage({super.key, this.onOrderTap, this.onUserInfoUpdate});
+  final String userName;
+  final String userEmail;
+  final VoidCallback? onLogout;
+  final void Function(String name, String email, String phone)?
+      onUserInfoUpdate;
+
+  const HomePage({
+    super.key,
+    this.onOrderTap,
+    this.onUserInfoUpdate,
+    this.userName = '',
+    this.userEmail = '',
+    this.onLogout,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  bool hasUserInfo = false;
-  String userName = '';
-  String userEmail = '';
-  String userPhone = '';
-  
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
-  }
-  
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-  
-  Future<void> _loadUserInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('user_name');
-    final savedEmail = prefs.getString('user_email');
-    final savedPhone = prefs.getString('user_phone');
-    
-    if (savedName != null && savedEmail != null && savedPhone != null) {
-      setState(() {
-        hasUserInfo = true;
-        userName = savedName;
-        userEmail = savedEmail;
-        userPhone = savedPhone;
-      });
-      
-      // Notify parent widget
-      if (widget.onUserInfoUpdate != null) {
-        widget.onUserInfoUpdate!(savedName, savedEmail, savedPhone);
-      }
-    } else {
-      // Show dialog to collect user info
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showUserInfoDialog();
-      });
-    }
-  }
-  
-  Future<void> _saveUserInfo(String name, String email, String phone) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', name);
-    await prefs.setString('user_email', email);
-    await prefs.setString('user_phone', phone);
-  }
-  
-  void _showUserInfoDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Welcome! 👋'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Please provide your contact information to get started:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone Number (Cyprus)',
-                hintText: '97643172',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
-              ),
-              keyboardType: TextInputType.phone,
-              maxLength: 8,
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              final name = _nameController.text.trim();
-              final email = _emailController.text.trim();
-              final phone = _phoneController.text.trim();
-              
-              if (name.isEmpty || email.isEmpty || phone.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please fill in all fields'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
-              if (!email.contains('@')) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid email'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
-              if (phone.length != 8 || !phone.startsWith('9')) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid Cyprus phone number (8 digits, starting with 9)'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
-              setState(() {
-                hasUserInfo = true;
-                userName = name;
-                userEmail = email;
-                userPhone = phone;
-              });
-              
-              _saveUserInfo(name, email, phone);
-              
-              // Notify parent widget
-              if (widget.onUserInfoUpdate != null) {
-                widget.onUserInfoUpdate!(name, email, phone);
-              }
-              
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✓ Information saved!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-
-
-
-
-
-
-
-
-  void _showEditAccountDialog() {
-    final nameController = TextEditingController(text: userName);
-    final emailController = TextEditingController(text: userEmail);
-    final phoneController = TextEditingController(text: userPhone);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.account_circle, color: Colors.orange),
-            SizedBox(width: 10),
-            Text('Account Details'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone Number',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final email = emailController.text.trim();
-              final phone = phoneController.text.trim();
-              
-              if (name.isEmpty || email.isEmpty || !email.contains('@')) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid name and email'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
-              if (phone.length != 8 || !phone.startsWith('9')) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid Cyprus phone number (8 digits, starting with 9)'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
-              setState(() {
-                userName = name;
-                userEmail = email;
-                userPhone = phone;
-              });
-              
-              _saveUserInfo(name, email, phone);
-              
-              // Notify parent widget
-              if (widget.onUserInfoUpdate != null) {
-                widget.onUserInfoUpdate!(name, email, phone);
-              }
-              
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✓ Account updated!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -532,12 +380,38 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.orange,
         title: const Text('Home', style: TextStyle(color: Colors.white)),
         actions: [
-          if (hasUserInfo)
-            IconButton(
-              icon: const Icon(Icons.account_circle, color: Colors.white, size: 30),
-              onPressed: _showEditAccountDialog,
-              tooltip: 'Account',
-            ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        if (widget.onLogout != null) {
+                          widget.onLogout!();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            tooltip: 'Logout',
+          ),
         ],
       ),
       body: Center(
@@ -550,10 +424,10 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 100),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Welcome to Burger App',
-                style: TextStyle(
-                  fontSize: 32,
+              Text(
+                'Welcome, ${widget.userName}!',
+                style: const TextStyle(
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -594,12 +468,17 @@ class BurgerOrderPage extends StatefulWidget {
   final String userName;
   final String userEmail;
   final String userPhone;
+  final String? authToken;
+  final String? userId;
+
   const BurgerOrderPage({
     super.key,
     this.onOrderPlaced,
     required this.userName,
     required this.userEmail,
     required this.userPhone,
+    this.authToken,
+    this.userId,
   });
 
   @override
@@ -626,7 +505,11 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
   }
 
   int get totalItems {
-    return _cart.burgerCount + _cart.friesCount + _cart.colaCount + _cart.fantaCount + _cart.waterCount;
+    return _cart.burgerCount +
+        _cart.friesCount +
+        _cart.colaCount +
+        _cart.fantaCount +
+        _cart.waterCount;
   }
 
   void viewCart() {
@@ -655,6 +538,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
           userName: widget.userName,
           userEmail: widget.userEmail,
           userPhone: widget.userPhone,
+          userId: widget.userId,
+          authToken: widget.authToken,
           onOrderPlaced: (order) {
             setState(() {
               _cart.reset();
@@ -1016,8 +901,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.friesCount,
             'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400',
             () => setState(() => _cart.friesCount++),
-            () => setState(
-                () => _cart.friesCount = _cart.friesCount > 0 ? _cart.friesCount - 1 : 0),
+            () => setState(() => _cart.friesCount =
+                _cart.friesCount > 0 ? _cart.friesCount - 1 : 0),
           ),
         ];
       case 'Drinks':
@@ -1028,7 +913,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.colaCount,
             'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400',
             () => setState(() => _cart.colaCount++),
-            () => setState(() => _cart.colaCount = _cart.colaCount > 0 ? _cart.colaCount - 1 : 0),
+            () => setState(() => _cart.colaCount =
+                _cart.colaCount > 0 ? _cart.colaCount - 1 : 0),
           ),
           const SizedBox(height: 16),
           _buildItemCard(
@@ -1037,8 +923,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.fantaCount,
             'https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=400',
             () => setState(() => _cart.fantaCount++),
-            () => setState(
-                () => _cart.fantaCount = _cart.fantaCount > 0 ? _cart.fantaCount - 1 : 0),
+            () => setState(() => _cart.fantaCount =
+                _cart.fantaCount > 0 ? _cart.fantaCount - 1 : 0),
           ),
           const SizedBox(height: 16),
           _buildItemCard(
@@ -1047,8 +933,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.waterCount,
             'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400',
             () => setState(() => _cart.waterCount++),
-            () => setState(
-                () => _cart.waterCount = _cart.waterCount > 0 ? _cart.waterCount - 1 : 0),
+            () => setState(() => _cart.waterCount =
+                _cart.waterCount > 0 ? _cart.waterCount - 1 : 0),
           ),
         ];
       default:
@@ -1222,6 +1108,8 @@ class CartPage extends StatefulWidget {
   final String userName;
   final String userEmail;
   final String userPhone;
+  final String? userId;
+  final String? authToken;
   final void Function(Map<String, dynamic>)? onOrderPlaced;
 
   const CartPage({
@@ -1241,6 +1129,8 @@ class CartPage extends StatefulWidget {
     required this.userEmail,
     required this.userPhone,
     required this.onOrderPlaced,
+    this.userId,
+    this.authToken,
   });
 
   @override
@@ -1250,19 +1140,19 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   // Payment method
   String _selectedPaymentMethod = 'Cash on Delivery';
-  
+
   // Discount code
   final TextEditingController _discountCodeController = TextEditingController();
   String _discountMessage = '';
   double _discountAmount = 0.0;
   bool _discountApplied = false;
-  
+
   @override
   void dispose() {
     _discountCodeController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _applyDiscountCode() async {
     final code = _discountCodeController.text.trim().toUpperCase();
     if (code.isEmpty) {
@@ -1273,21 +1163,23 @@ class _CartPageState extends State<CartPage> {
       });
       return;
     }
-    
+
     try {
       final response = await http.post(
         Uri.parse('${OrdersHistory.serverUrl}/api/validate-discount'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'code': code}),
       );
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['valid'] == true) {
           setState(() {
             _discountApplied = true;
-            _discountAmount = (widget.totalPrice * data['discountPercent'] / 100);
-            _discountMessage = '✓ ${data['discountPercent']}% discount applied!';
+            _discountAmount =
+                (widget.totalPrice * data['discountPercent'] / 100);
+            _discountMessage =
+                '✓ ${data['discountPercent']}% discount applied!';
           });
         } else {
           setState(() {
@@ -1311,7 +1203,7 @@ class _CartPageState extends State<CartPage> {
       });
     }
   }
-  
+
   void _removeDiscount() {
     setState(() {
       _discountCodeController.clear();
@@ -1337,21 +1229,24 @@ class _CartPageState extends State<CartPage> {
       'totalPrice': finalPrice,
       'originalPrice': widget.totalPrice,
       'discountAmount': _discountAmount,
-      'discountCode': _discountApplied ? _discountCodeController.text.trim().toUpperCase() : null,
+      'discountCode': _discountApplied
+          ? _discountCodeController.text.trim().toUpperCase()
+          : null,
       'paymentMethod': _selectedPaymentMethod,
       'userName': widget.userName,
       'userEmail': widget.userEmail,
       'userPhone': widget.userPhone,
+      'userId': widget.userId,
     };
     OrdersHistory().addOrder(order);
 
     if (widget.onOrderPlaced != null) {
       widget.onOrderPlaced!(order);
     }
-    
+
     // Navigate back and show success message
     Navigator.of(context).pop();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('✓ Order placed!\n💳 Payment: $_selectedPaymentMethod'),
@@ -1570,9 +1465,11 @@ class _CartPageState extends State<CartPage> {
                 ],
                 // Other items
                 if (widget.friesCount > 0)
-                  _buildCartItem('French Fries', widget.friesCount, widget.friesPrice),
+                  _buildCartItem(
+                      'French Fries', widget.friesCount, widget.friesPrice),
                 if (widget.colaCount > 0)
-                  _buildCartItem('Coca Cola', widget.colaCount, widget.colaPrice),
+                  _buildCartItem(
+                      'Coca Cola', widget.colaCount, widget.colaPrice),
                 if (widget.fantaCount > 0)
                   _buildCartItem('Fanta', widget.fantaCount, widget.fantaPrice),
                 if (widget.waterCount > 0)
@@ -1795,7 +1692,8 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.fastfood, size: 48, color: Colors.grey[600]),
+                          Icon(Icons.fastfood,
+                              size: 48, color: Colors.grey[600]),
                           SizedBox(height: 8),
                           Text(
                             'Save burger.jpg to\nassets/images/',
@@ -2046,7 +1944,6 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2137,5 +2034,3 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
     );
   }
 }
-
-

@@ -3,12 +3,14 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 const ORDERS_FILE = path.join(__dirname, 'burger_orders.json');
 const DISCOUNTS_FILE = path.join(__dirname, 'discount_codes.json');
 const HISTORY_FILE = path.join(__dirname, 'fulfilled_orders_history.json');
+const USERS_FILE = path.join(__dirname, 'users.json');
 
 // Middleware
 app.use(cors());
@@ -29,6 +31,145 @@ if (!fs.existsSync(DISCOUNTS_FILE)) {
 if (!fs.existsSync(HISTORY_FILE)) {
   fs.writeFileSync(HISTORY_FILE, '[]');
 }
+
+// Initialize users file if it doesn't exist
+if (!fs.existsSync(USERS_FILE)) {
+  fs.writeFileSync(USERS_FILE, '[]');
+}
+
+// Helper function to hash passwords
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Helper function to generate session token
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Middleware to verify authentication token
+function authenticateToken(req, res, next) {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const user = users.find(u => u.token === token);
+    
+    if (!user) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+}
+
+// POST endpoint to register a new user
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    
+    // Validate input
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    // Read existing users
+    let users = [];
+    if (fs.existsSync(USERS_FILE)) {
+      const data = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(data);
+    }
+    
+    // Check if user already exists
+    const existingUser = users.find(u => u.email === email || u.phone === phone);
+    if (existingUser) {
+      return res.status(409).json({ error: 'User with this email or phone already exists' });
+    }
+    
+    // Create new user
+    const token = generateToken();
+    const newUser = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      phone,
+      password: hashPassword(password),
+      token,
+      createdAt: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = newUser;
+    res.json({ success: true, user: userWithoutPassword, token });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({ error: 'Failed to register user' });
+  }
+});
+
+// POST endpoint to login
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    
+    // Read users
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    
+    // Find user and verify password
+    const user = users.find(u => u.email === email && u.password === hashPassword(password));
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    // Generate new token
+    const token = generateToken();
+    user.token = token;
+    user.lastLogin = new Date().toISOString();
+    
+    // Save updated users
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ success: true, user: userWithoutPassword, token });
+  } catch (error) {
+    console.error('Error logging in:', error);
+    res.status(500).json({ error: 'Failed to login' });
+  }
+});
+
+// GET endpoint to fetch current user's orders
+app.get('/api/user/orders', authenticateToken, (req, res) => {
+  try {
+    const data = fs.readFileSync(ORDERS_FILE, 'utf8');
+    const orders = JSON.parse(data);
+    
+    // Filter orders by user ID
+    const userOrders = orders.filter(order => order.userId === req.user.id);
+    
+    res.json(userOrders);
+  } catch (error) {
+    console.error('Error reading user orders:', error);
+    res.status(500).json({ error: 'Failed to read orders' });
+  }
+});
 
 // GET endpoint to fetch all orders
 app.get('/api/orders', (req, res) => {
