@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
-  "updateMessage": "Update: Enhanced authentication and automatic update notifications!",
-  "releaseDate": "2026-01-16"
+  "version": "2.3.0",
+  "updateMessage": "Update: Currency changed from $ to € (Euro)! 💶",
+  "releaseDate": "2026-01-17"
 }

@@ -465,7 +465,7 @@
                     <div class="stat-label">Total Orders</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="totalRevenue">$0.00</div>
+                    <div class="stat-number" id="totalRevenue">€0.00</div>
                     <div class="stat-label">Total Revenue</div>
                 </div>
                 <div class="stat-card">
@@ -723,7 +723,7 @@
                         ${contactHTML}
                         <div class="total-price">
                             <span class="total-label">Total:</span>
-                            <span class="total-amount">$${order.totalPrice.toFixed(2)}</span>
+                            <span class="total-amount">€${order.totalPrice.toFixed(2)}</span>
                         </div>
                     </div>
                 `;
@@ -739,7 +739,7 @@
             );
 
             document.getElementById('totalOrders').textContent = totalOrders;
-            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = `€${totalRevenue.toFixed(2)}`;
             document.getElementById('totalBurgers').textContent = totalBurgers;
         }
 
@@ -1210,7 +1210,7 @@
                                     ${itemsList}
                                 </div>
                                 <div style="margin-top: 10px;">
-                                    <strong style="color: #27ae60; font-size: 1.1em;">💰 Total: $${order.totalPrice.toFixed(2)}</strong>
+                                    <strong style="color: #27ae60; font-size: 1.1em;">💰 Total: €${order.totalPrice.toFixed(2)}</strong>
                                     ${order.discountCode ? `<span style="margin-left: 10px; color: #3498db;">🎟️ Code: ${order.discountCode}</span>` : ''}
                                 </div>
                                 <div style="margin-top: 8px; color: #666; font-size: 0.9em;">

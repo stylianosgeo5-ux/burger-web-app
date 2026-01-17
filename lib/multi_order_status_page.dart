@@ -161,7 +161,7 @@ class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
                             ),
                           ),
                           Text(
-                            '\$${_localOrders[index]['totalPrice'].toStringAsFixed(2)}',
+                            '€${_localOrders[index]['totalPrice'].toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 11,
                               color: isSelected ? Colors.white70 : Colors.black54,

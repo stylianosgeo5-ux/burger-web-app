@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'order_status_page.dart';
 import 'multi_order_status_page.dart';
 import 'auth_page.dart';
-import 'update_checker.dart';
 
 // Navigation bar widget
 class AppNavigationBar extends StatelessWidget {
@@ -46,20 +45,13 @@ class AppNavigationBar extends StatelessWidget {
                   color: selected ? Colors.orange : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: selected
-                      ? [
-                          BoxShadow(
-                              color: Colors.orange.withOpacity(0.12),
-                              blurRadius: 8,
-                              offset: Offset(0, 2))
-                        ]
+                      ? [BoxShadow(color: Colors.orange.withOpacity(0.12), blurRadius: 8, offset: Offset(0, 2))]
                       : [],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(tab.icon,
-                        color: selected ? Colors.white : Colors.orange,
-                        size: 22),
+                    Icon(tab.icon, color: selected ? Colors.white : Colors.orange, size: 22),
                     const SizedBox(height: 2),
                     Text(
                       tab.label,
@@ -88,8 +80,7 @@ class _NavTab {
 
 class MainNavigationController extends StatefulWidget {
   @override
-  State<MainNavigationController> createState() =>
-      _MainNavigationControllerState();
+  State<MainNavigationController> createState() => _MainNavigationControllerState();
 }
 
 class _MainNavigationControllerState extends State<MainNavigationController> {
@@ -109,12 +100,6 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
     _checkAuthentication();
   }
 
-  @override
-  void dispose() {
-    UpdateChecker.stopChecking();
-    super.dispose();
-  }
-
   Future<void> _checkAuthentication() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -122,7 +107,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
     final userName = prefs.getString('user_name');
     final userEmail = prefs.getString('user_email');
     final userPhone = prefs.getString('user_phone');
-
+    
     setState(() {
       _authToken = token;
       _userId = userId;
@@ -132,17 +117,15 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       _isAuthenticated = token != null;
       _isCheckingAuth = false;
     });
-
+    
     if (_isAuthenticated) {
       await _loadOrdersFromServer();
-      // Start checking for updates
-      UpdateChecker.startChecking(context);
     }
   }
 
   Future<void> _loadOrdersFromServer() async {
     if (_authToken == null) return;
-
+    
     try {
       final response = await http.get(
         Uri.parse('${OrdersHistory.serverUrl}/api/user/orders'),
@@ -151,7 +134,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
           'Authorization': 'Bearer $_authToken',
         },
       );
-
+      
       if (response.statusCode == 200) {
         final List<dynamic> orders = json.decode(response.body);
         setState(() {
@@ -163,15 +146,14 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
     }
   }
 
-  Future<void> _handleAuthSuccess(
-      String token, Map<String, dynamic> user) async {
+  Future<void> _handleAuthSuccess(String token, Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     await prefs.setString('user_id', user['id']);
     await prefs.setString('user_name', user['name']);
     await prefs.setString('user_email', user['email']);
     await prefs.setString('user_phone', user['phone']);
-
+    
     setState(() {
       _authToken = token;
       _userId = user['id'];
@@ -180,7 +162,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       _userPhone = user['phone'];
       _isAuthenticated = true;
     });
-
+    
     await _loadOrdersFromServer();
   }
 
@@ -191,7 +173,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
     await prefs.remove('user_name');
     await prefs.remove('user_email');
     await prefs.remove('user_phone');
-
+    
     setState(() {
       _authToken = null;
       _userId = null;
@@ -227,14 +209,14 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
         ),
       );
     }
-
+    
     // Show auth page if not authenticated
     if (!_isAuthenticated) {
       return AuthPage(
         onAuthSuccess: _handleAuthSuccess,
       );
     }
-
+    
     Widget page;
     if (_selectedIndex == 0) {
       page = HomePage(
@@ -309,7 +291,7 @@ class OrdersHistory {
   OrdersHistory._internal();
 
   List<Map<String, dynamic>> allOrders = [];
-
+  
   // Production backend URL
   static String get serverUrl => 'https://burger-backend-rxwl.onrender.com';
 
@@ -360,12 +342,11 @@ class HomePage extends StatefulWidget {
   final String userName;
   final String userEmail;
   final VoidCallback? onLogout;
-  final void Function(String name, String email, String phone)?
-      onUserInfoUpdate;
-
+  final void Function(String name, String email, String phone)? onUserInfoUpdate;
+  
   const HomePage({
-    super.key,
-    this.onOrderTap,
+    super.key, 
+    this.onOrderTap, 
     this.onUserInfoUpdate,
     this.userName = '',
     this.userEmail = '',
@@ -377,6 +358,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  
   @override
   void initState() {
     super.initState();
@@ -479,7 +461,7 @@ class BurgerOrderPage extends StatefulWidget {
   final String userPhone;
   final String? authToken;
   final String? userId;
-
+  
   const BurgerOrderPage({
     super.key,
     this.onOrderPlaced,
@@ -514,11 +496,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
   }
 
   int get totalItems {
-    return _cart.burgerCount +
-        _cart.friesCount +
-        _cart.colaCount +
-        _cart.fantaCount +
-        _cart.waterCount;
+    return _cart.burgerCount + _cart.friesCount + _cart.colaCount + _cart.fantaCount + _cart.waterCount;
   }
 
   void viewCart() {
@@ -654,7 +632,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '\$${burgerPrice.toStringAsFixed(2)}',
+                        '€${burgerPrice.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[700],
@@ -860,7 +838,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                             ),
                           ),
                           Text(
-                            '\$${totalPrice.toStringAsFixed(2)}',
+                            '€${totalPrice.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -910,8 +888,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.friesCount,
             'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400',
             () => setState(() => _cart.friesCount++),
-            () => setState(() => _cart.friesCount =
-                _cart.friesCount > 0 ? _cart.friesCount - 1 : 0),
+            () => setState(
+                () => _cart.friesCount = _cart.friesCount > 0 ? _cart.friesCount - 1 : 0),
           ),
         ];
       case 'Drinks':
@@ -922,8 +900,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.colaCount,
             'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400',
             () => setState(() => _cart.colaCount++),
-            () => setState(() => _cart.colaCount =
-                _cart.colaCount > 0 ? _cart.colaCount - 1 : 0),
+            () => setState(() => _cart.colaCount = _cart.colaCount > 0 ? _cart.colaCount - 1 : 0),
           ),
           const SizedBox(height: 16),
           _buildItemCard(
@@ -932,8 +909,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.fantaCount,
             'https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=400',
             () => setState(() => _cart.fantaCount++),
-            () => setState(() => _cart.fantaCount =
-                _cart.fantaCount > 0 ? _cart.fantaCount - 1 : 0),
+            () => setState(
+                () => _cart.fantaCount = _cart.fantaCount > 0 ? _cart.fantaCount - 1 : 0),
           ),
           const SizedBox(height: 16),
           _buildItemCard(
@@ -942,8 +919,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             _cart.waterCount,
             'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400',
             () => setState(() => _cart.waterCount++),
-            () => setState(() => _cart.waterCount =
-                _cart.waterCount > 0 ? _cart.waterCount - 1 : 0),
+            () => setState(
+                () => _cart.waterCount = _cart.waterCount > 0 ? _cart.waterCount - 1 : 0),
           ),
         ];
       default:
@@ -1028,7 +1005,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\$${price.toStringAsFixed(2)}',
+                    '€${price.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[700],
@@ -1149,19 +1126,19 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   // Payment method
   String _selectedPaymentMethod = 'Cash on Delivery';
-
+  
   // Discount code
   final TextEditingController _discountCodeController = TextEditingController();
   String _discountMessage = '';
   double _discountAmount = 0.0;
   bool _discountApplied = false;
-
+  
   @override
   void dispose() {
     _discountCodeController.dispose();
     super.dispose();
   }
-
+  
   Future<void> _applyDiscountCode() async {
     final code = _discountCodeController.text.trim().toUpperCase();
     if (code.isEmpty) {
@@ -1172,23 +1149,21 @@ class _CartPageState extends State<CartPage> {
       });
       return;
     }
-
+    
     try {
       final response = await http.post(
         Uri.parse('${OrdersHistory.serverUrl}/api/validate-discount'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'code': code}),
       );
-
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['valid'] == true) {
           setState(() {
             _discountApplied = true;
-            _discountAmount =
-                (widget.totalPrice * data['discountPercent'] / 100);
-            _discountMessage =
-                '✓ ${data['discountPercent']}% discount applied!';
+            _discountAmount = (widget.totalPrice * data['discountPercent'] / 100);
+            _discountMessage = '✓ ${data['discountPercent']}% discount applied!';
           });
         } else {
           setState(() {
@@ -1212,7 +1187,7 @@ class _CartPageState extends State<CartPage> {
       });
     }
   }
-
+  
   void _removeDiscount() {
     setState(() {
       _discountCodeController.clear();
@@ -1238,9 +1213,7 @@ class _CartPageState extends State<CartPage> {
       'totalPrice': finalPrice,
       'originalPrice': widget.totalPrice,
       'discountAmount': _discountAmount,
-      'discountCode': _discountApplied
-          ? _discountCodeController.text.trim().toUpperCase()
-          : null,
+      'discountCode': _discountApplied ? _discountCodeController.text.trim().toUpperCase() : null,
       'paymentMethod': _selectedPaymentMethod,
       'userName': widget.userName,
       'userEmail': widget.userEmail,
@@ -1252,10 +1225,10 @@ class _CartPageState extends State<CartPage> {
     if (widget.onOrderPlaced != null) {
       widget.onOrderPlaced!(order);
     }
-
+    
     // Navigate back and show success message
     Navigator.of(context).pop();
-
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('✓ Order placed!\n💳 Payment: $_selectedPaymentMethod'),
@@ -1439,7 +1412,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                                 Text(
-                                  '\$${widget.burgerPrice.toStringAsFixed(2)}',
+                                  '€${widget.burgerPrice.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -1474,11 +1447,9 @@ class _CartPageState extends State<CartPage> {
                 ],
                 // Other items
                 if (widget.friesCount > 0)
-                  _buildCartItem(
-                      'French Fries', widget.friesCount, widget.friesPrice),
+                  _buildCartItem('French Fries', widget.friesCount, widget.friesPrice),
                 if (widget.colaCount > 0)
-                  _buildCartItem(
-                      'Coca Cola', widget.colaCount, widget.colaPrice),
+                  _buildCartItem('Coca Cola', widget.colaCount, widget.colaPrice),
                 if (widget.fantaCount > 0)
                   _buildCartItem('Fanta', widget.fantaCount, widget.fantaPrice),
                 if (widget.waterCount > 0)
@@ -1511,7 +1482,7 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                       Text(
-                        '\$${widget.totalPrice.toStringAsFixed(2)}',
+                        '€${widget.totalPrice.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 18,
                           decoration: TextDecoration.lineThrough,
@@ -1532,7 +1503,7 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                       Text(
-                        '-\$${_discountAmount.toStringAsFixed(2)}',
+                        '-€${_discountAmount.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 18,
                           color: Colors.green,
@@ -1554,7 +1525,7 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ),
                     Text(
-                      '\$${(widget.totalPrice - _discountAmount).toStringAsFixed(2)}',
+                      '€${(widget.totalPrice - _discountAmount).toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -1608,7 +1579,7 @@ class _CartPageState extends State<CartPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\$${price.toStringAsFixed(2)} each',
+                    '€${price.toStringAsFixed(2)} each',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[700],
@@ -1629,7 +1600,7 @@ class _CartPageState extends State<CartPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${(price * count).toStringAsFixed(2)}',
+                  '€${(price * count).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1701,8 +1672,7 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.fastfood,
-                              size: 48, color: Colors.grey[600]),
+                          Icon(Icons.fastfood, size: 48, color: Colors.grey[600]),
                           SizedBox(height: 8),
                           Text(
                             'Save burger.jpg to\nassets/images/',
@@ -1953,6 +1923,7 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2043,3 +2014,5 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
     );
   }
 }
+
+
