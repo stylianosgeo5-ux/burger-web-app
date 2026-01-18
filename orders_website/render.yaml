@@ -9,3 +9,9 @@ services:
         value: production
       - key: PORT
         value: 8000
+      - key: PERSISTENT_STORAGE_DIR
+        value: /data
+    disk:
+      name: burger-data
+      mountPath: /data
+      sizeGB: 1

@@ -7,10 +7,13 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-const ORDERS_FILE = path.join(__dirname, 'burger_orders.json');
-const DISCOUNTS_FILE = path.join(__dirname, 'discount_codes.json');
-const HISTORY_FILE = path.join(__dirname, 'fulfilled_orders_history.json');
-const USERS_FILE = path.join(__dirname, 'users.json');
+
+// Use persistent disk if available, otherwise use current directory
+const DATA_DIR = process.env.PERSISTENT_STORAGE_DIR || __dirname;
+const ORDERS_FILE = path.join(DATA_DIR, 'burger_orders.json');
+const DISCOUNTS_FILE = path.join(DATA_DIR, 'discount_codes.json');
+const HISTORY_FILE = path.join(DATA_DIR, 'fulfilled_orders_history.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 // Middleware
 app.use(cors());
