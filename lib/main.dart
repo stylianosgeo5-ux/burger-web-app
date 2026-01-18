@@ -124,25 +124,49 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
   }
 
   Future<void> _loadOrdersFromServer() async {
-    if (_authToken == null) return;
-    
     try {
-      final response = await http.get(
-        Uri.parse('${OrdersHistory.serverUrl}/api/user/orders'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_authToken',
-        },
-      );
+      // Try authenticated endpoint first
+      if (_authToken != null) {
+        final response = await http.get(
+          Uri.parse('${OrdersHistory.serverUrl}/api/user/orders'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_authToken',
+          },
+        );
+        
+        if (response.statusCode == 200) {
+          final List<dynamic> orders = json.decode(response.body);
+          setState(() {
+            _allOrders = orders.cast<Map<String, dynamic>>();
+          });
+          print('Loaded ${_allOrders.length} orders from server (authenticated)');
+          return;
+        }
+      }
       
-      if (response.statusCode == 200) {
-        final List<dynamic> orders = json.decode(response.body);
-        setState(() {
-          _allOrders = orders.cast<Map<String, dynamic>>();
-        });
-        print('Loaded ${_allOrders.length} orders from server');
-      } else {
-        print('Failed to load orders: ${response.statusCode} - ${response.body}');
+      // Fallback: Use non-authenticated endpoint with user identifiers
+      final queryParams = {
+        if (_userId != null) 'userId': _userId!,
+        if (_userEmail.isNotEmpty) 'email': _userEmail,
+        if (_userPhone.isNotEmpty) 'phone': _userPhone,
+      };
+      
+      if (queryParams.isNotEmpty) {
+        final uri = Uri.parse('${OrdersHistory.serverUrl}/api/orders/by-user')
+            .replace(queryParameters: queryParams);
+        
+        final response = await http.get(uri);
+        
+        if (response.statusCode == 200) {
+          final List<dynamic> orders = json.decode(response.body);
+          setState(() {
+            _allOrders = orders.cast<Map<String, dynamic>>();
+          });
+          print('Loaded ${_allOrders.length} orders from server (by user info)');
+        } else {
+          print('Failed to load orders: ${response.statusCode} - ${response.body}');
+        }
       }
     } catch (e) {
       print('Error loading orders from server: $e');

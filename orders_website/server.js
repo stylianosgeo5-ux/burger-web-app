@@ -171,6 +171,32 @@ app.get('/api/user/orders', authenticateToken, (req, res) => {
   }
 });
 
+// GET endpoint to fetch orders by user identifier (email, phone, or userId)
+app.get('/api/orders/by-user', (req, res) => {
+  try {
+    const { userId, email, phone } = req.query;
+    
+    if (!userId && !email && !phone) {
+      return res.status(400).json({ error: 'userId, email, or phone required' });
+    }
+    
+    const data = fs.readFileSync(ORDERS_FILE, 'utf8');
+    const orders = JSON.parse(data);
+    
+    // Filter orders by any matching identifier
+    const userOrders = orders.filter(order => 
+      (userId && order.userId === userId) ||
+      (email && order.userEmail === email) ||
+      (phone && order.userPhone === phone)
+    );
+    
+    res.json(userOrders);
+  } catch (error) {
+    console.error('Error reading orders by user:', error);
+    res.status(500).json({ error: 'Failed to read orders' });
+  }
+});
+
 // GET endpoint to fetch all orders
 app.get('/api/orders', (req, res) => {
   try {
