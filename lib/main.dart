@@ -125,27 +125,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
 
   Future<void> _loadOrdersFromServer() async {
     try {
-      // Try authenticated endpoint first
-      if (_authToken != null) {
-        final response = await http.get(
-          Uri.parse('${OrdersHistory.serverUrl}/api/user/orders'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $_authToken',
-          },
-        );
-        
-        if (response.statusCode == 200) {
-          final List<dynamic> orders = json.decode(response.body);
-          setState(() {
-            _allOrders = orders.cast<Map<String, dynamic>>();
-          });
-          print('Loaded ${_allOrders.length} orders from server (authenticated)');
-          return;
-        }
-      }
-      
-      // Fallback: Use non-authenticated endpoint with user identifiers
+      // Use non-authenticated endpoint with user identifiers (works even if token is invalid)
       final queryParams = {
         if (_userId != null) 'userId': _userId!,
         if (_userEmail.isNotEmpty) 'email': _userEmail,
@@ -163,13 +143,14 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
           setState(() {
             _allOrders = orders.cast<Map<String, dynamic>>();
           });
-          print('Loaded ${_allOrders.length} orders from server (by user info)');
+          print('✓ Loaded ${_allOrders.length} orders from server');
+          return;
         } else {
-          print('Failed to load orders: ${response.statusCode} - ${response.body}');
+          print('Failed to load orders: ${response.statusCode}');
         }
       }
     } catch (e) {
-      print('Error loading orders from server: $e');
+      print('Error loading orders: $e');
     }
   }
 
