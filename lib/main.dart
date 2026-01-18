@@ -25,7 +25,7 @@ class AppNavigationBar extends StatelessWidget {
     final List<_NavTab> tabs = [
       _NavTab('Home', Icons.home),
       _NavTab('Order', Icons.fastfood),
-      if (showOrderStatus) _NavTab('Status', Icons.assignment_turned_in),
+      _NavTab('Status', Icons.assignment_turned_in),
     ];
     return Container(
       color: Colors.orange[50],
