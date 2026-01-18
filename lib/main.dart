@@ -295,20 +295,25 @@ class OrdersHistory {
   // Production backend URL
   static String get serverUrl => 'https://burger-backend-rxwl.onrender.com';
 
-  Future<void> addOrder(Map<String, dynamic> order) async {
+  Future<void> addOrder(Map<String, dynamic> order, {String? authToken}) async {
     allOrders.add(order);
-    await _sendToServer(order);
+    await _sendToServer(order, authToken: authToken);
   }
 
   void clearHistory() {
     allOrders.clear();
   }
 
-  Future<void> _sendToServer(Map<String, dynamic> order) async {
+  Future<void> _sendToServer(Map<String, dynamic> order, {String? authToken}) async {
     try {
+      final headers = {'Content-Type': 'application/json'};
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+      
       await http.post(
         Uri.parse('$serverUrl/api/orders'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: json.encode(order),
       );
     } catch (e) {
@@ -1220,7 +1225,7 @@ class _CartPageState extends State<CartPage> {
       'userPhone': widget.userPhone,
       'userId': widget.userId,
     };
-    OrdersHistory().addOrder(order);
+    OrdersHistory().addOrder(order, authToken: widget.authToken);
 
     if (widget.onOrderPlaced != null) {
       widget.onOrderPlaced!(order);
