@@ -140,6 +140,9 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
         setState(() {
           _allOrders = orders.cast<Map<String, dynamic>>();
         });
+        print('Loaded ${_allOrders.length} orders from server');
+      } else {
+        print('Failed to load orders: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error loading orders from server: $e');
@@ -247,9 +250,8 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
           children: [
             AppNavigationBar(
               selectedIndex: _selectedIndex,
-              showOrderStatus: _allOrders.isNotEmpty,
+              showOrderStatus: true, // Always show status tab
               onTap: (i) {
-                if (i == 2 && _allOrders.isEmpty) return;
                 _onNavTap(i);
               },
             ),
