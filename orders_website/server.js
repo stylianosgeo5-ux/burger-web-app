@@ -478,7 +478,14 @@ app.post('/api/validate-discount', (req, res) => {
     }
     
     // Check if expired
-    if (new Date(discount.expiryDate) < new Date()) {
+    const expiryDate = new Date(discount.expiryDate);
+    const today = new Date();
+    // Set expiry to end of day (23:59:59)
+    expiryDate.setHours(23, 59, 59, 999);
+    // Set today to start of day for comparison
+    today.setHours(0, 0, 0, 0);
+    
+    if (expiryDate < today) {
       return res.json({ valid: false, message: 'Discount code expired' });
     }
     
