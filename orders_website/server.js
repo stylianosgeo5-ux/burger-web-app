@@ -419,6 +419,42 @@ app.delete('/api/orders/:index', (req, res) => {
   }
 });
 
+// DELETE endpoint to cancel an order by timestamp (for users)
+app.delete('/api/orders/cancel/:timestamp', (req, res) => {
+  try {
+    const timestamp = req.params.timestamp;
+    
+    // Read existing orders
+    const data = fs.readFileSync(ORDERS_FILE, 'utf8');
+    let orders = JSON.parse(data);
+    
+    // Find order by timestamp
+    const orderIndex = orders.findIndex(o => o.timestamp === timestamp);
+    
+    if (orderIndex === -1) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    const order = orders[orderIndex];
+    
+    // Check if order is already confirmed
+    if (order.confirmed) {
+      return res.status(400).json({ error: 'Cannot cancel confirmed order' });
+    }
+    
+    // Remove order
+    orders.splice(orderIndex, 1);
+    
+    // Save to file
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+    
+    res.json({ success: true, message: 'Order cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+});
+
 // DISCOUNT CODE ENDPOINTS
 
 // POST endpoint to validate discount code
