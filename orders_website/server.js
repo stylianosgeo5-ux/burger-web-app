@@ -14,6 +14,7 @@ const ORDERS_FILE = path.join(DATA_DIR, 'burger_orders.json');
 const DISCOUNTS_FILE = path.join(DATA_DIR, 'discount_codes.json');
 const HISTORY_FILE = path.join(DATA_DIR, 'fulfilled_orders_history.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const OPENING_HOURS_FILE = path.join(DATA_DIR, 'opening_hours.json');
 
 // Middleware
 app.use(cors());
@@ -38,6 +39,20 @@ if (!fs.existsSync(HISTORY_FILE)) {
 // Initialize users file if it doesn't exist
 if (!fs.existsSync(USERS_FILE)) {
   fs.writeFileSync(USERS_FILE, '[]');
+}
+
+// Initialize opening hours file if it doesn't exist
+if (!fs.existsSync(OPENING_HOURS_FILE)) {
+  const defaultHours = {
+    "monday": "9:00 AM - 10:00 PM",
+    "tuesday": "9:00 AM - 10:00 PM",
+    "wednesday": "9:00 AM - 10:00 PM",
+    "thursday": "9:00 AM - 10:00 PM",
+    "friday": "9:00 AM - 11:00 PM",
+    "saturday": "10:00 AM - 11:00 PM",
+    "sunday": "10:00 AM - 9:00 PM"
+  };
+  fs.writeFileSync(OPENING_HOURS_FILE, JSON.stringify(defaultHours, null, 2));
 }
 
 // Helper function to hash passwords
@@ -647,6 +662,39 @@ app.get('/api/export-contacts', (req, res) => {
   } catch (error) {
     console.error('Error exporting contacts:', error);
     res.status(500).json({ error: 'Failed to export contacts' });
+  }
+});
+
+// GET endpoint to retrieve opening hours
+app.get('/api/opening-hours', (req, res) => {
+  try {
+    const data = fs.readFileSync(OPENING_HOURS_FILE, 'utf8');
+    const hours = JSON.parse(data);
+    res.json(hours);
+  } catch (error) {
+    console.error('Error reading opening hours:', error);
+    res.status(500).json({ error: 'Failed to load opening hours' });
+  }
+});
+
+// PUT endpoint to update opening hours
+app.put('/api/opening-hours', (req, res) => {
+  try {
+    const hours = req.body;
+    
+    // Validate input
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    for (const day of days) {
+      if (!hours[day]) {
+        return res.status(400).json({ error: `Missing hours for ${day}` });
+      }
+    }
+    
+    fs.writeFileSync(OPENING_HOURS_FILE, JSON.stringify(hours, null, 2));
+    res.json({ success: true, hours });
+  } catch (error) {
+    console.error('Error updating opening hours:', error);
+    res.status(500).json({ error: 'Failed to update opening hours' });
   }
 });
 

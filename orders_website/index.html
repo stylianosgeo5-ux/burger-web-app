@@ -479,6 +479,7 @@
             <button onclick="refreshOrders()">🔄 Refresh</button>
             <button onclick="showDiscountModal()">🎟️ Manage Discounts</button>
             <button onclick="showHistoryModal()">📜 Order History</button>
+            <button onclick="showOpeningHoursModal()">🕒 Opening Hours</button>
             <button onclick="exportContacts()">📊 Export Contacts</button>
             <button onclick="clearAllOrders()" style="background: #e74c3c;">🗑️ Clear All</button>
             <div id="debugStatus" style="margin-left: auto; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 0.9em;">Loading...</div>
@@ -535,6 +536,50 @@
             </div>
             
             <div id="historyContainer"></div>
+        </div>
+    </div>
+
+    <!-- Opening Hours Modal -->
+    <div id="openingHoursModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px; overflow-y: auto;">
+        <div style="max-width: 600px; margin: 50px auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 50px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #ff6b35; margin: 0;">🕒 Opening Hours</h2>
+                <button onclick="closeOpeningHoursModal()" style="background: #95a5a6; padding: 8px 16px;">✕ Close</button>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                <div style="display: grid; gap: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Monday:</label>
+                        <input type="text" id="hours_monday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tuesday:</label>
+                        <input type="text" id="hours_tuesday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Wednesday:</label>
+                        <input type="text" id="hours_wednesday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Thursday:</label>
+                        <input type="text" id="hours_thursday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Friday:</label>
+                        <input type="text" id="hours_friday" placeholder="9:00 AM - 11:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Saturday:</label>
+                        <input type="text" id="hours_saturday" placeholder="10:00 AM - 11:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Sunday:</label>
+                        <input type="text" id="hours_sunday" placeholder="10:00 AM - 9:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <button onclick="saveOpeningHours()" style="background: #27ae60; padding: 12px; font-size: 1em; margin-top: 10px;">✓ Save Opening Hours</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1159,6 +1204,63 @@
         
         function closeHistoryModal() {
             document.getElementById('historyModal').style.display = 'none';
+        }
+        
+        // Opening Hours Functions
+        async function showOpeningHoursModal() {
+            document.getElementById('openingHoursModal').style.display = 'block';
+            await loadOpeningHours();
+        }
+        
+        function closeOpeningHoursModal() {
+            document.getElementById('openingHoursModal').style.display = 'none';
+        }
+        
+        async function loadOpeningHours() {
+            try {
+                const response = await fetch('/api/opening-hours');
+                if (response.ok) {
+                    const hours = await response.json();
+                    document.getElementById('hours_monday').value = hours.monday || '';
+                    document.getElementById('hours_tuesday').value = hours.tuesday || '';
+                    document.getElementById('hours_wednesday').value = hours.wednesday || '';
+                    document.getElementById('hours_thursday').value = hours.thursday || '';
+                    document.getElementById('hours_friday').value = hours.friday || '';
+                    document.getElementById('hours_saturday').value = hours.saturday || '';
+                    document.getElementById('hours_sunday').value = hours.sunday || '';
+                }
+            } catch (e) {
+                showNotification('⚠ Failed to load opening hours');
+            }
+        }
+        
+        async function saveOpeningHours() {
+            const hours = {
+                monday: document.getElementById('hours_monday').value,
+                tuesday: document.getElementById('hours_tuesday').value,
+                wednesday: document.getElementById('hours_wednesday').value,
+                thursday: document.getElementById('hours_thursday').value,
+                friday: document.getElementById('hours_friday').value,
+                saturday: document.getElementById('hours_saturday').value,
+                sunday: document.getElementById('hours_sunday').value
+            };
+            
+            try {
+                const response = await fetch('/api/opening-hours', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(hours)
+                });
+                
+                if (response.ok) {
+                    showNotification('✓ Opening hours updated successfully!');
+                    closeOpeningHoursModal();
+                } else {
+                    showNotification('⚠ Failed to update opening hours');
+                }
+            } catch (e) {
+                showNotification('⚠ Error updating opening hours');
+            }
         }
         
         async function loadHistory() {
