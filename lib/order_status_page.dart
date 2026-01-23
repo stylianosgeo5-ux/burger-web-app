@@ -6,7 +6,8 @@ import 'dart:convert';
 
 class OrderStatusPage extends StatefulWidget {
   final Map<String, dynamic> order;
-  const OrderStatusPage({Key? key, required this.order}) : super(key: key);
+  final VoidCallback? onOrderDeleted;
+  const OrderStatusPage({Key? key, required this.order, this.onOrderDeleted}) : super(key: key);
 
   @override
   State<OrderStatusPage> createState() => _OrderStatusPageState();
@@ -246,6 +247,10 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
                   _buildOrderDetailsCard(),
                   const SizedBox(height: 20),
                   _buildItemsCard(),
+                  if (!_isConfirmed) ...[
+                    const SizedBox(height: 20),
+                    _buildDeleteOrderButton(),
+                  ],
                 ],
               ),
             ),
@@ -704,5 +709,142 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
         ],
       ),
     );
+  }
+
+  Widget _buildDeleteOrderButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.delete_outline, size: 40, color: Colors.red[400]),
+          const SizedBox(height: 10),
+          const Text(
+            'Need to cancel?',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'You can cancel this order before it is confirmed',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _deleteOrder,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Cancel Order',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteOrder() async {
+    // Show confirmation dialog
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Order?'),
+        content: const Text('Are you sure you want to cancel this order?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await http.delete(
+        Uri.parse('$serverUrl/api/orders/cancel/${widget.order['timestamp']}'),
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          // Call the callback to notify parent
+          if (widget.onOrderDeleted != null) {
+            widget.onOrderDeleted!();
+          }
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Order cancelled successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 1),
+            ),
+          );
+          
+          // Wait for the deletion to be processed
+          await Future.delayed(const Duration(milliseconds: 800));
+          
+          if (mounted) {
+            // Pop back - the sync in multi_order_status_page will handle the removal
+            Navigator.of(context).pop(true);
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to cancel order'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error cancelling order'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

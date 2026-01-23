@@ -1,0 +1,1 @@
+Please manually save the delivery location image as delivery_location.jpg in this directory.

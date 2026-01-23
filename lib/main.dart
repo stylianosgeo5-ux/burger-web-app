@@ -370,10 +370,32 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  Map<String, String> _openingHours = {};
+  bool _isLoadingHours = true;
+  bool _isHoursExpanded = false;
+  static const String serverUrl = 'https://burger-backend-rxwl.onrender.com';
   
   @override
   void initState() {
     super.initState();
+    _fetchOpeningHours();
+  }
+
+  Future<void> _fetchOpeningHours() async {
+    try {
+      final response = await http.get(Uri.parse('$serverUrl/api/opening-hours'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> hours = json.decode(response.body);
+        setState(() {
+          _openingHours = hours.map((key, value) => MapEntry(key, value.toString()));
+          _isLoadingHours = false;
+        });
+      } else {
+        setState(() => _isLoadingHours = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingHours = false);
+    }
   }
 
   @override
@@ -417,49 +439,83 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                '🍔',
-                style: TextStyle(fontSize: 100),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome, ${widget.userName}!',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Welcome, ${widget.userName}!',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(height: 30),
+            if (_isLoadingHours)
+              const Center(child: CircularProgressIndicator(color: Colors.orange))
+            else if (_openingHours.isNotEmpty) ...[
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isHoursExpanded = !_isHoursExpanded;
+                  });
+                },
+                child: Row(
+                  children: [
+                    const Text(
+                      'Opening Hours',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    AnimatedRotation(
+                      turns: _isHoursExpanded ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
-                'Delicious burgers made fresh!',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: widget.onOrderTap,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 50,
-                    vertical: 20,
-                  ),
-                ),
-                child: const Text(
-                  'Order Here',
-                  style: TextStyle(fontSize: 24),
-                ),
-              ),
+              if (_isHoursExpanded) ...[
+                const SizedBox(height: 15),
+                ..._openingHours.entries.map((entry) {
+                  final day = entry.key[0].toUpperCase() + entry.key.substring(1);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: Text(
+                            day,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          entry.value,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -1283,11 +1339,61 @@ class _CartPageState extends State<CartPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'The order will be paid at delivery location with cash or Revolut',
+                  'Η παραγγελία θα πληρώνεται στο σημείο παράδοσης με μετρητά ή μέσω Revolut.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
                   ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                
+                // Delivery Location
+                Row(
+                  children: [
+                    const Text(
+                      'Delivery Location',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.location_on,
+                      color: Colors.red,
+                      size: 24,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/delivery_location.jpg',
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Η τοποθεσία παραλαβής των παραγγελιών θα είναι αποκλειστικά μπροστά από τις Εστίες apolonia',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 const Divider(),
@@ -1652,290 +1758,6 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
     _ingredients = Map<String, bool>.from(widget.ingredients);
   }
 
-  Widget _buildBurgerVisual() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFFF8E1), Color(0xFFFFE0B2)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // Full burger image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  'assets/images/burger.jpg',
-                  width: 280,
-                  height: 350,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 280,
-                      height: 350,
-                      color: Colors.grey[300],
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.fastfood, size: 48, color: Colors.grey[600]),
-                          SizedBox(height: 8),
-                          Text(
-                            'Save burger.jpg to\nassets/images/',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // Ingredient masks overlay with precise cropping
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  width: 280,
-                  height: 350,
-                  child: Stack(
-                    children: [
-                      // Ketchup mask (top layer under bun)
-                      if (!(_ingredients['Ketchup'] ?? true))
-                        Positioned(
-                          top: 58,
-                          left: 20,
-                          right: 20,
-                          child: Container(
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Lettuce mask
-                      if (!(_ingredients['Lettuce'] ?? true))
-                        Positioned(
-                          top: 66,
-                          left: 15,
-                          right: 15,
-                          child: Container(
-                            height: 35,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Tomato mask
-                      if (!(_ingredients['Tomato'] ?? true))
-                        Positioned(
-                          top: 101,
-                          left: 18,
-                          right: 18,
-                          child: Container(
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Onion mask
-                      if (!(_ingredients['Onion'] ?? true))
-                        Positioned(
-                          top: 129,
-                          left: 16,
-                          right: 16,
-                          child: Container(
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Pickle mask
-                      if (!(_ingredients['Pickle Cucumber'] ?? true))
-                        Positioned(
-                          top: 159,
-                          left: 20,
-                          right: 20,
-                          child: Container(
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Egg mask
-                      if (!(_ingredients['Egg'] ?? true))
-                        Positioned(
-                          top: 181,
-                          left: 18,
-                          right: 18,
-                          child: Container(
-                            height: 45,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Bacon mask
-                      if (!(_ingredients['Bacon'] ?? true))
-                        Positioned(
-                          top: 226,
-                          left: 22,
-                          right: 22,
-                          child: Container(
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Beef Patty mask
-                      if (!(_ingredients['Beef Patty'] ?? true))
-                        Positioned(
-                          top: 258,
-                          left: 20,
-                          right: 20,
-                          child: Container(
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C).withOpacity(0.95),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Extra Patty mask (shown when enabled)
-                      if (_ingredients['Extra Patty'] ?? false)
-                        Positioned(
-                          top: 230,
-                          left: 22,
-                          right: 22,
-                          child: Container(
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF8B4513),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black45,
-                                  blurRadius: 3,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Mayo mask (bottom - above bottom bun)
-                      if (!(_ingredients['Mayo'] ?? true))
-                        Positioned(
-                          top: 300,
-                          left: 20,
-                          right: 20,
-                          child: Container(
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFD4996C),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSeed() {
-    return Container(
-      width: 4,
-      height: 6,
-      decoration: BoxDecoration(
-        color: Color(0xFFFFF9C4),
-        borderRadius: BorderRadius.circular(2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 1,
-            offset: Offset(0, 0.5),
-          ),
-        ],
-      ),
-    );
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1945,10 +1767,20 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
       ),
       body: Column(
         children: [
-          // Visual Burger Representation
+          // Remove Ingredients Header
           Container(
             color: Colors.orange[50],
-            child: _buildBurgerVisual(),
+            padding: const EdgeInsets.all(24),
+            width: double.infinity,
+            child: const Text(
+              'Remove Ingredients',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
           ),
           Expanded(
             child: ListView(

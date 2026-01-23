@@ -178,9 +178,22 @@ class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
         ),
         // Order status page for selected order
         Expanded(
-          child: OrderStatusPage(
-            key: ValueKey(_localOrders[_selectedOrderIndex]['timestamp']),
-            order: _localOrders[_selectedOrderIndex],
+          child: Builder(
+            builder: (context) {
+              return FutureBuilder(
+                future: Future.delayed(Duration.zero),
+                builder: (context, snapshot) {
+                  return OrderStatusPage(
+                    key: ValueKey(_localOrders[_selectedOrderIndex]['timestamp']),
+                    order: _localOrders[_selectedOrderIndex],
+                    onOrderDeleted: () async {
+                      // Sync immediately when order is deleted
+                      await _syncWithServer();
+                    },
+                  );
+                },
+              );
+            },
           ),
         ),
       ],
