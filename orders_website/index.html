@@ -1106,7 +1106,12 @@
             }
             
             container.innerHTML = discounts.map((discount, index) => {
-                const isExpired = new Date(discount.expiryDate) < new Date();
+                // Check expiry same way as server - end of expiry day vs start of today
+                const expiryDate = new Date(discount.expiryDate);
+                expiryDate.setHours(23, 59, 59, 999);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isExpired = expiryDate < today;
                 const isLimitReached = discount.usageLimit > 0 && discount.usedCount >= discount.usageLimit;
                 const statusColor = isExpired || isLimitReached ? '#e74c3c' : '#27ae60';
                 const statusText = isExpired ? 'EXPIRED' : isLimitReached ? 'LIMIT REACHED' : 'ACTIVE';
