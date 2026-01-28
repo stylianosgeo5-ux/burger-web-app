@@ -50,8 +50,8 @@ class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
   }
 
   void _startSyncing() {
-    // Check server every 5 seconds to see if orders still exist
-    _syncTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    // Check server every 10 seconds (increased from 5) to see if orders still exist
+    _syncTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (mounted) {
         _syncWithServer();
       }
@@ -69,7 +69,13 @@ class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
         final ordersToRemove = <Map<String, dynamic>>[];
         
         for (var localOrder in _localOrders) {
-          if (!serverTimestamps.contains(localOrder['timestamp'])) {
+          // Only remove if order is older than 30 seconds AND not on server
+          // This prevents removing freshly created orders that haven't synced yet
+          final orderTime = DateTime.parse(localOrder['timestamp']);
+          final now = DateTime.now();
+          final age = now.difference(orderTime).inSeconds;
+          
+          if (age > 30 && !serverTimestamps.contains(localOrder['timestamp'])) {
             ordersToRemove.add(localOrder);
           }
         }

@@ -304,27 +304,33 @@ class OrdersHistory {
 
   Future<void> addOrder(Map<String, dynamic> order, {String? authToken}) async {
     allOrders.add(order);
-    await _sendToServer(order, authToken: authToken);
+    final success = await _sendToServer(order, authToken: authToken);
+    if (!success) {
+      print('Warning: Order saved locally but failed to sync to server');
+    }
   }
 
   void clearHistory() {
     allOrders.clear();
   }
 
-  Future<void> _sendToServer(Map<String, dynamic> order, {String? authToken}) async {
+  Future<bool> _sendToServer(Map<String, dynamic> order, {String? authToken}) async {
     try {
       final headers = {'Content-Type': 'application/json'};
       if (authToken != null) {
         headers['Authorization'] = 'Bearer $authToken';
       }
       
-      await http.post(
+      final response = await http.post(
         Uri.parse('$serverUrl/api/orders'),
         headers: headers,
         body: json.encode(order),
       );
+      
+      return response.statusCode == 200;
     } catch (e) {
-      // Silently fail
+      print('Error sending order to server: $e');
+      return false;
     }
   }
 }
