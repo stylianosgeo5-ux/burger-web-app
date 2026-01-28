@@ -254,7 +254,9 @@ app.post('/api/orders', (req, res) => {
       const openTime = openHour * 60 + openMin;
       const closeTime = closeHour * 60 + closeMin;
       
-      if (currentTime < openTime || currentTime > closeTime) {
+      const isOpen = currentTime >= openTime && currentTime <= closeTime;
+      
+      if (!isOpen) {
         return res.status(400).json({ 
           error: `Store is currently closed. Opening hours: ${dayHours.open} - ${dayHours.close}`,
           closed: true,
