@@ -232,6 +232,37 @@ app.post('/api/orders', (req, res) => {
   try {
     const newOrder = req.body;
     
+    // Check if store is currently open
+    const openingHours = JSON.parse(fs.readFileSync(OPENING_HOURS_FILE, 'utf8'));
+    const now = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const currentDay = dayNames[now.getDay()];
+    const dayHours = openingHours[currentDay];
+    
+    // Check if today is closed or if current time is outside opening hours
+    if (dayHours === 'Closed' || !dayHours) {
+      return res.status(400).json({ 
+        error: 'Store is currently closed',
+        closed: true 
+      });
+    }
+    
+    if (dayHours.open && dayHours.close) {
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes
+      const [openHour, openMin] = dayHours.open.split(':').map(Number);
+      const [closeHour, closeMin] = dayHours.close.split(':').map(Number);
+      const openTime = openHour * 60 + openMin;
+      const closeTime = closeHour * 60 + closeMin;
+      
+      if (currentTime < openTime || currentTime > closeTime) {
+        return res.status(400).json({ 
+          error: `Store is currently closed. Opening hours: ${dayHours.open} - ${dayHours.close}`,
+          closed: true,
+          hours: dayHours
+        });
+      }
+    }
+    
     // Read existing orders
     let orders = [];
     if (fs.existsSync(ORDERS_FILE)) {
@@ -717,6 +748,47 @@ app.get('/api/opening-hours', (req, res) => {
   } catch (error) {
     console.error('Error reading opening hours:', error);
     res.status(500).json({ error: 'Failed to load opening hours' });
+  }
+});
+
+// GET endpoint to check if store is currently open
+app.get('/api/is-open', (req, res) => {
+  try {
+    const openingHours = JSON.parse(fs.readFileSync(OPENING_HOURS_FILE, 'utf8'));
+    const now = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const currentDay = dayNames[now.getDay()];
+    const dayHours = openingHours[currentDay];
+    
+    if (dayHours === 'Closed' || !dayHours) {
+      return res.json({ 
+        isOpen: false, 
+        message: 'Store is currently closed',
+        currentDay: currentDay
+      });
+    }
+    
+    if (dayHours.open && dayHours.close) {
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+      const [openHour, openMin] = dayHours.open.split(':').map(Number);
+      const [closeHour, closeMin] = dayHours.close.split(':').map(Number);
+      const openTime = openHour * 60 + openMin;
+      const closeTime = closeHour * 60 + closeMin;
+      
+      const isOpen = currentTime >= openTime && currentTime <= closeTime;
+      
+      return res.json({
+        isOpen,
+        message: isOpen ? 'Store is open' : `Store is currently closed. Opening hours: ${dayHours.open} - ${dayHours.close}`,
+        currentDay,
+        hours: dayHours
+      });
+    }
+    
+    res.json({ isOpen: false, message: 'Opening hours not configured' });
+  } catch (error) {
+    console.error('Error checking store status:', error);
+    res.status(500).json({ error: 'Failed to check store status' });
   }
 });
 

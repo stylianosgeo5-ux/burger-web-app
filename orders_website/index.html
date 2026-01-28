@@ -549,33 +549,103 @@
             
             <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                 <div style="display: grid; gap: 15px;">
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Monday:</label>
-                        <input type="text" id="hours_monday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Monday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_monday" onchange="toggleDayHours('monday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_monday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_monday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_monday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Tuesday:</label>
-                        <input type="text" id="hours_tuesday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Tuesday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_tuesday" onchange="toggleDayHours('tuesday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_tuesday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_tuesday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_tuesday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Wednesday:</label>
-                        <input type="text" id="hours_wednesday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Wednesday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_wednesday" onchange="toggleDayHours('wednesday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_wednesday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_wednesday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_wednesday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Thursday:</label>
-                        <input type="text" id="hours_thursday" placeholder="9:00 AM - 10:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Thursday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_thursday" onchange="toggleDayHours('thursday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_thursday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_thursday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_thursday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Friday:</label>
-                        <input type="text" id="hours_friday" placeholder="9:00 AM - 11:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Friday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_friday" onchange="toggleDayHours('friday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_friday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_friday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_friday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Saturday:</label>
-                        <input type="text" id="hours_saturday" placeholder="10:00 AM - 11:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Saturday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_saturday" onchange="toggleDayHours('saturday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_saturday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_saturday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_saturday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Sunday:</label>
-                        <input type="text" id="hours_sunday" placeholder="10:00 AM - 9:00 PM" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">Sunday:</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="closed_sunday" onchange="toggleDayHours('sunday')" style="width: 18px; height: 18px;">
+                                <span style="font-weight: 600;">Closed</span>
+                            </label>
+                            <div id="times_sunday" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                <input type="time" id="open_sunday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <span style="font-weight: bold;">-</span>
+                                <input type="time" id="close_sunday" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
                     </div>
                     <button onclick="saveOpeningHours()" style="background: #27ae60; padding: 12px; font-size: 1em; margin-top: 10px;">✓ Save Opening Hours</button>
                 </div>
@@ -1221,18 +1291,34 @@
             document.getElementById('openingHoursModal').style.display = 'none';
         }
         
+        function toggleDayHours(day) {
+            const isClosed = document.getElementById(`closed_${day}`).checked;
+            const timesDiv = document.getElementById(`times_${day}`);
+            timesDiv.style.display = isClosed ? 'none' : 'flex';
+            if (isClosed) {
+                document.getElementById(`open_${day}`).value = '';
+                document.getElementById(`close_${day}`).value = '';
+            }
+        }
+        
         async function loadOpeningHours() {
             try {
                 const response = await fetch('/api/opening-hours');
                 if (response.ok) {
                     const hours = await response.json();
-                    document.getElementById('hours_monday').value = hours.monday || '';
-                    document.getElementById('hours_tuesday').value = hours.tuesday || '';
-                    document.getElementById('hours_wednesday').value = hours.wednesday || '';
-                    document.getElementById('hours_thursday').value = hours.thursday || '';
-                    document.getElementById('hours_friday').value = hours.friday || '';
-                    document.getElementById('hours_saturday').value = hours.saturday || '';
-                    document.getElementById('hours_sunday').value = hours.sunday || '';
+                    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                    
+                    days.forEach(day => {
+                        const dayData = hours[day];
+                        if (dayData === 'Closed' || !dayData) {
+                            document.getElementById(`closed_${day}`).checked = true;
+                            toggleDayHours(day);
+                        } else if (dayData.open && dayData.close) {
+                            document.getElementById(`open_${day}`).value = dayData.open;
+                            document.getElementById(`close_${day}`).value = dayData.close;
+                            document.getElementById(`closed_${day}`).checked = false;
+                        }
+                    });
                 }
             } catch (e) {
                 showNotification('⚠ Failed to load opening hours');
@@ -1240,15 +1326,24 @@
         }
         
         async function saveOpeningHours() {
-            const hours = {
-                monday: document.getElementById('hours_monday').value,
-                tuesday: document.getElementById('hours_tuesday').value,
-                wednesday: document.getElementById('hours_wednesday').value,
-                thursday: document.getElementById('hours_thursday').value,
-                friday: document.getElementById('hours_friday').value,
-                saturday: document.getElementById('hours_saturday').value,
-                sunday: document.getElementById('hours_sunday').value
-            };
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const hours = {};
+            
+            days.forEach(day => {
+                const isClosed = document.getElementById(`closed_${day}`).checked;
+                if (isClosed) {
+                    hours[day] = 'Closed';
+                } else {
+                    const open = document.getElementById(`open_${day}`).value;
+                    const close = document.getElementById(`close_${day}`).value;
+                    if (open && close) {
+                        hours[day] = { open, close };
+                    } else {
+                        showNotification('⚠ Please set opening and closing times or mark as closed');
+                        return;
+                    }
+                }
+            });
             
             try {
                 const response = await fetch('/api/opening-hours', {

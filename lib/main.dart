@@ -1266,6 +1266,62 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _handlePlaceOrder() async {
+    // Check if store is open before placing order
+    try {
+      final response = await http.get(Uri.parse('${OrdersHistory.serverUrl}/api/is-open'));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['isOpen'] == false) {
+          // Show error dialog if store is closed
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(Icons.cancel, color: Colors.red, size: 30),
+                    SizedBox(width: 10),
+                    Text('Store Closed'),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data['message'] ?? 'Store is currently closed',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Please place your order during opening hours.',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ],
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      // If check fails, proceed anyway (don't block orders on network error)
+      print('Failed to check store hours: $e');
+    }
+    
     _completeOrder();
   }
 
