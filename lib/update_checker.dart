@@ -7,7 +7,7 @@ import 'dart:html' as html;
 
 class UpdateChecker {
   static const String versionUrl = 'https://burgercy.com/version.json';
-  static const String currentVersion = '2.3.0'; // Update this when you make changes
+  static const String currentVersion = '2.4.0'; // Update this when you make changes
   
   static Timer? _timer;
   

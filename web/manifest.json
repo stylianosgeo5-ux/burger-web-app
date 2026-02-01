@@ -1,6 +1,7 @@
 {
     "name": "🍔 burgercy.com",
     "short_name": "🍔 Burger",
+    "version": "2.4.0",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FF6B35",
