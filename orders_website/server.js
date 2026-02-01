@@ -234,9 +234,13 @@ app.post('/api/orders', (req, res) => {
     
     // Check if store is currently open
     const openingHours = JSON.parse(fs.readFileSync(OPENING_HOURS_FILE, 'utf8'));
+    
+    // Use Greece timezone (UTC+2/+3)
     const now = new Date();
+    const greeceTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+    
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const currentDay = dayNames[now.getDay()];
+    const currentDay = dayNames[greeceTime.getDay()];
     const dayHours = openingHours[currentDay];
     
     // Check if today is closed or if current time is outside opening hours
@@ -248,7 +252,7 @@ app.post('/api/orders', (req, res) => {
     }
     
     if (dayHours.open && dayHours.close) {
-      const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes
+      const currentTime = greeceTime.getHours() * 60 + greeceTime.getMinutes(); // Convert to minutes
       const [openHour, openMin] = dayHours.open.split(':').map(Number);
       const [closeHour, closeMin] = dayHours.close.split(':').map(Number);
       const openTime = openHour * 60 + openMin;
@@ -757,9 +761,13 @@ app.get('/api/opening-hours', (req, res) => {
 app.get('/api/is-open', (req, res) => {
   try {
     const openingHours = JSON.parse(fs.readFileSync(OPENING_HOURS_FILE, 'utf8'));
+    
+    // Use Greece timezone (UTC+2/+3)
     const now = new Date();
+    const greeceTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+    
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const currentDay = dayNames[now.getDay()];
+    const currentDay = dayNames[greeceTime.getDay()];
     const dayHours = openingHours[currentDay];
     
     if (dayHours === 'Closed' || !dayHours) {
@@ -771,7 +779,7 @@ app.get('/api/is-open', (req, res) => {
     }
     
     if (dayHours.open && dayHours.close) {
-      const currentTime = now.getHours() * 60 + now.getMinutes();
+      const currentTime = greeceTime.getHours() * 60 + greeceTime.getMinutes();
       const [openHour, openMin] = dayHours.open.split(':').map(Number);
       const [closeHour, closeMin] = dayHours.close.split(':').map(Number);
       const openTime = openHour * 60 + openMin;
