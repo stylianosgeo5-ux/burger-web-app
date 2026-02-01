@@ -197,6 +197,10 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
     setState(() {
       _selectedIndex = idx;
     });
+    // Reload orders when navigating to status page
+    if (idx == 2) {
+      _loadOrdersFromServer();
+    }
   }
 
   void _onOrderPlaced(Map<String, dynamic> order) {
@@ -204,7 +208,10 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       _allOrders.add(order);
       _selectedIndex = 2; // Go to status
     });
-    _loadOrdersFromServer(); // Reload from server
+    // Wait a bit before reloading to ensure server has processed the order
+    Future.delayed(Duration(seconds: 1), () {
+      _loadOrdersFromServer();
+    });
   }
 
   @override
