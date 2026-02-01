@@ -186,6 +186,27 @@ class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
         Expanded(
           child: Builder(
             builder: (context) {
+              // Safety check: ensure selected index is valid
+              if (_selectedOrderIndex >= _localOrders.length) {
+                if (_localOrders.isNotEmpty) {
+                  _selectedOrderIndex = _localOrders.length - 1;
+                } else {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.receipt_long, size: 80, color: Colors.grey[300]),
+                        const SizedBox(height: 20),
+                        Text(
+                          'No orders yet',
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              }
+              
               return FutureBuilder(
                 future: Future.delayed(Duration.zero),
                 builder: (context, snapshot) {
