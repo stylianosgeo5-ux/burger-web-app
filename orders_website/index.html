@@ -427,6 +427,36 @@
             font-size: 1.2em;
         }
 
+        .print-btn {
+            background: #9b59b6;
+            padding: 8px 15px;
+            font-size: 0.9em;
+            margin-right: 8px;
+        }
+
+        .print-btn:hover {
+            background: #8e44ad;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printReceipt, #printReceipt * {
+                visibility: visible;
+            }
+            #printReceipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 75mm;
+            }
+            @page {
+                size: 75mm auto;
+                margin: 0;
+            }
+        }
+
         @media (max-width: 768px) {
             .orders-grid {
                 grid-template-columns: 1fr;
@@ -823,6 +853,7 @@
                         <div class="order-header">
                             <span class="order-number">#${orderNumber} ${fulfilledBadge} ${cookedBadge}</span>
                             <div>
+                                <button class="print-btn" onclick="printReceipt(${index})">🖨️ Print</button>
                                 ${!order.fulfilled ? `<button class="fulfill-btn" onclick="fulfillOrder(${index})">✓ Fulfill</button>` : ''}
                                 ${!order.cooked && order.confirmed ? `<button class="cooked-btn" onclick="cookOrder(${index})">🍳 Cooked</button>` : ''}
                                 ${!order.confirmed ? `<button class="confirm-btn" onclick="confirmOrder(${index})">✓ Confirm</button>` : '<span class="confirmed-badge">✓ Confirmed</span>'}
@@ -1502,6 +1533,105 @@
                 showNotification('❌ Failed to export contacts');
                 console.error('Export error:', error);
             }
+        }
+
+        // Print receipt function (75mm thermal printer)
+        function printReceipt(index) {
+            const orders = currentOrders;
+            const order = orders.slice().reverse()[index];
+            const orderNumber = orders.length - index;
+            
+            // Build items list
+            let itemsList = '';
+            
+            if (order.burgerOrders && order.burgerOrders.length > 0) {
+                order.burgerOrders.forEach((burger, idx) => {
+                    const ingredients = Object.entries(burger.ingredients || {})
+                        .filter(([_, selected]) => selected)
+                        .map(([name, _]) => name)
+                        .join(', ');
+                    
+                    itemsList += `<div style="margin-bottom: 8px;"><strong>Burger ${idx + 1}</strong><br><small style="font-size: 10px;">${ingredients || 'Standard'}</small></div>`;
+                });
+            }
+            
+            if (order.friesCount > 0) {
+                itemsList += `<div>French Fries x${order.friesCount}</div>`;
+            }
+            if (order.colaCount > 0) {
+                itemsList += `<div>Coca Cola x${order.colaCount}</div>`;
+            }
+            if (order.fantaCount > 0) {
+                itemsList += `<div>Fanta x${order.fantaCount}</div>`;
+            }
+            if (order.waterCount > 0) {
+                itemsList += `<div>Water x${order.waterCount}</div>`;
+            }
+            
+            // Create printable receipt HTML (optimized for 75mm thermal printer)
+            const receiptHTML = `
+                <div id="printReceipt" style="width: 75mm; padding: 5mm; font-family: monospace; font-size: 12px; line-height: 1.4;">
+                    <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+                        <div style="font-size: 16px; font-weight: bold;">burgercy.com</div>
+                        <div style="font-size: 10px;">Order Receipt</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; font-size: 11px;">
+                        <div><strong>Order #${orderNumber}</strong></div>
+                        <div>${formatDateTime(order.timestamp)}</div>
+                    </div>
+                    
+                    ${order.userName || order.userEmail || order.userPhone ? `
+                    <div style="margin-bottom: 12px; font-size: 10px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                        ${order.userName ? `<div>Name: ${order.userName}</div>` : ''}
+                        ${order.userPhone ? `<div>Phone: ${order.userPhone}</div>` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-bottom: 12px; font-size: 11px;">
+                        <strong>Items:</strong>
+                        <div style="margin-top: 4px;">${itemsList}</div>
+                    </div>
+                    
+                    <div style="border-top: 1px dashed #000; padding-top: 8px; margin-top: 12px; font-size: 11px;">
+                        <div>Payment: ${order.paymentMethod || 'Cash'}</div>
+                    </div>
+                    
+                    <div style="border-top: 2px solid #000; padding-top: 8px; margin-top: 8px; font-size: 14px; font-weight: bold;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>TOTAL:</span>
+                            <span>€${order.totalPrice.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #000; font-size: 10px;">
+                        <div>Thank you!</div>
+                        <div>burgercy.com</div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing receipt if any
+            const existingReceipt = document.getElementById('printReceipt');
+            if (existingReceipt) {
+                existingReceipt.remove();
+            }
+            
+            // Add receipt to page
+            const receiptContainer = document.createElement('div');
+            receiptContainer.innerHTML = receiptHTML;
+            document.body.appendChild(receiptContainer.firstElementChild);
+            
+            // Print
+            window.print();
+            
+            // Clean up after print
+            setTimeout(() => {
+                const receipt = document.getElementById('printReceipt');
+                if (receipt) {
+                    receipt.remove();
+                }
+            }, 1000);
         }
     </script>
 
