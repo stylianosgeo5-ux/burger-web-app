@@ -254,7 +254,7 @@ app.post('/api/orders', (req, res) => {
       const openTime = openHour * 60 + openMin;
       const closeTime = closeHour * 60 + closeMin;
       
-      const isOpen = currentTime >= openTime && currentTime <= closeTime;
+      const isOpen = currentTime >= openTime && currentTime < closeTime;
       
       if (!isOpen) {
         return res.status(400).json({ 
@@ -777,7 +777,7 @@ app.get('/api/is-open', (req, res) => {
       const openTime = openHour * 60 + openMin;
       const closeTime = closeHour * 60 + closeMin;
       
-      const isOpen = currentTime >= openTime && currentTime <= closeTime;
+      const isOpen = currentTime >= openTime && currentTime < closeTime;
       
       return res.json({
         isOpen,
