@@ -722,6 +722,44 @@
 
         let currentOrders = [];
 
+        // Play money sound for new orders
+        function playMoneySound() {
+            // Create audio context and generate cash register "cha-ching" sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+            
+            // Second tone for "cha-ching" effect
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                
+                osc2.frequency.value = 1000;
+                osc2.type = 'sine';
+                
+                gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.5);
+            }, 100);
+        }
+
         // Load orders from JSON file or localStorage
         async function loadOrders() {
             if (currentOrders.length > 0) {
@@ -1155,7 +1193,13 @@
                     const response = await fetch('/api/orders?_=' + Date.now());
                     if (response.ok) {
                         const newOrders = await response.json();
-                        if (newOrders.length !== currentOrders.length) {
+                        if (newOrders.length > currentOrders.length) {
+                            // New order arrived - play money sound
+                            playMoneySound();
+                            currentOrders = newOrders;
+                            debugStatus.textContent = `✓ ${currentOrders.length} orders (auto-refreshed)`;
+                            await displayOrders();
+                        } else if (newOrders.length !== currentOrders.length) {
                             currentOrders = newOrders;
                             debugStatus.textContent = `✓ ${currentOrders.length} orders (auto-refreshed)`;
                             await displayOrders();
@@ -1558,53 +1602,28 @@
                         .map(([name, _]) => name)
                         .join(', ');
                     
-                    itemsList += `
-                        <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: start;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: bold; font-size: 14px;">Burger ${idx + 1}</div>
-                                <div style="font-size: 11px; margin-top: 2px;">${ingredients || 'Standard'}</div>
-                            </div>
-                            <div style="font-weight: bold; font-size: 14px;">€${burgerPrice.toFixed(2)}</div>
-                        </div>
-                    `;
+                    itemsList += `<div style="margin-bottom: 10px;">`;
+                    itemsList += `<div style="font-weight: bold; font-size: 14px;">Burger ${idx + 1} - €${burgerPrice.toFixed(2)}</div>`;
+                    itemsList += `<div style="font-size: 11px; margin-top: 2px;">${ingredients || 'Standard'}</div>`;
+                    itemsList += `</div>`;
                 });
             }
             
             if (order.friesCount > 0) {
                 const totalFries = friesPrice * order.friesCount;
-                itemsList += `
-                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between;">
-                        <div style="font-weight: bold; font-size: 14px;">French Fries x${order.friesCount}</div>
-                        <div style="font-weight: bold; font-size: 14px;">€${totalFries.toFixed(2)}</div>
-                    </div>
-                `;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">French Fries x${order.friesCount} - €${totalFries.toFixed(2)}</div>`;
             }
             if (order.colaCount > 0) {
                 const totalCola = colaPrice * order.colaCount;
-                itemsList += `
-                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between;">
-                        <div style="font-weight: bold; font-size: 14px;">Coca Cola x${order.colaCount}</div>
-                        <div style="font-weight: bold; font-size: 14px;">€${totalCola.toFixed(2)}</div>
-                    </div>
-                `;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Coca Cola x${order.colaCount} - €${totalCola.toFixed(2)}</div>`;
             }
             if (order.fantaCount > 0) {
                 const totalFanta = fantaPrice * order.fantaCount;
-                itemsList += `
-                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between;">
-                        <div style="font-weight: bold; font-size: 14px;">Fanta x${order.fantaCount}</div>
-                        <div style="font-weight: bold; font-size: 14px;">€${totalFanta.toFixed(2)}</div>
-                    </div>
-                `;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Fanta x${order.fantaCount} - €${totalFanta.toFixed(2)}</div>`;
             }
             if (order.waterCount > 0) {
                 const totalWater = waterPrice * order.waterCount;
-                itemsList += `
-                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between;">
-                        <div style="font-weight: bold; font-size: 14px;">Water x${order.waterCount}</div>
-                        <div style="font-weight: bold; font-size: 14px;">€${totalWater.toFixed(2)}</div>
-                    </div>
-                `;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Water x${order.waterCount} - €${totalWater.toFixed(2)}</div>`;
             }
             
             // Create printable receipt HTML (optimized for 75mm thermal printer)
