@@ -214,8 +214,21 @@ class _MultiOrderStatusPageState extends State<MultiOrderStatusPage> {
                     key: ValueKey(_localOrders[_selectedOrderIndex]['timestamp']),
                     order: _localOrders[_selectedOrderIndex],
                     onOrderDeleted: () async {
-                      // Sync immediately when order is deleted
-                      await _syncWithServer();
+                      // Remove the cancelled order immediately from local list
+                      final cancelledTimestamp = _localOrders[_selectedOrderIndex]['timestamp'];
+                      
+                      setState(() {
+                        _localOrders.removeWhere((order) => order['timestamp'] == cancelledTimestamp);
+                        // Also remove from global OrdersHistory
+                        OrdersHistory().allOrders.removeWhere((o) => o['timestamp'] == cancelledTimestamp);
+                        
+                        // Adjust selected index if needed
+                        if (_selectedOrderIndex >= _localOrders.length && _localOrders.isNotEmpty) {
+                          _selectedOrderIndex = _localOrders.length - 1;
+                        } else if (_localOrders.isEmpty) {
+                          _selectedOrderIndex = 0;
+                        }
+                      });
                     },
                   );
                 },
