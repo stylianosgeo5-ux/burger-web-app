@@ -1214,6 +1214,9 @@ class _CartPageState extends State<CartPage> {
   double _discountAmount = 0.0;
   bool _discountApplied = false;
   
+  // Loading state to prevent duplicate orders
+  bool _isPlacingOrder = false;
+  
   @override
   void dispose() {
     _discountCodeController.dispose();
@@ -1279,6 +1282,13 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _handlePlaceOrder() async {
+    // Prevent duplicate submissions
+    if (_isPlacingOrder) return;
+    
+    setState(() {
+      _isPlacingOrder = true;
+    });
+    
     // Check if store is open before placing order
     try {
       final response = await http.get(Uri.parse('${OrdersHistory.serverUrl}/api/is-open'));
@@ -1288,6 +1298,10 @@ class _CartPageState extends State<CartPage> {
         
         if (data['isOpen'] == false) {
           // Show error dialog if store is closed
+          setState(() {
+            _isPlacingOrder = false;
+          });
+          
           if (mounted) {
             showDialog(
               context: context,
@@ -1362,6 +1376,11 @@ class _CartPageState extends State<CartPage> {
     if (widget.onOrderPlaced != null) {
       widget.onOrderPlaced!(order);
     }
+    
+    // Reset loading state
+    setState(() {
+      _isPlacingOrder = false;
+    });
     
     // Navigate back and show success message
     Navigator.of(context).pop();
@@ -1725,16 +1744,36 @@ class _CartPageState extends State<CartPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => _handlePlaceOrder(),
+                    onPressed: _isPlacingOrder ? null : () => _handlePlaceOrder(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      disabledBackgroundColor: Colors.grey,
                     ),
-                    child: const Text(
-                      'Place Order',
-                      style: TextStyle(fontSize: 18),
-                    ),
+                    child: _isPlacingOrder
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Placing Order...',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            'Place Order',
+                            style: TextStyle(fontSize: 18),
+                          ),
                   ),
                 ),
               ],
