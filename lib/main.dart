@@ -1743,6 +1743,23 @@ class _CartPageState extends State<CartPage> {
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isPlacingOrder ? null : () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.edit),
+                    label: const Text(
+                      'Edit Order',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.orange,
+                      side: const BorderSide(color: Colors.orange, width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _isPlacingOrder ? null : () => _handlePlaceOrder(),
                     style: ElevatedButton.styleFrom(
