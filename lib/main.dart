@@ -1756,7 +1756,7 @@ class _CartPageState extends State<CartPage> {
                                       IconButton(
                                         onPressed: () => _editCustomBurger(index, order),
                                         icon: const Icon(Icons.edit, size: 20),
-                                        color: Colors.orange,
+                                        color: Colors.red,
                                         tooltip: 'Edit burger',
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
