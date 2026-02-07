@@ -921,6 +921,20 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _showBurgerCustomization,
+                icon: const Icon(Icons.edit),
+                label: const Text('Customize Burger'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
           ],
         ),
       ),
