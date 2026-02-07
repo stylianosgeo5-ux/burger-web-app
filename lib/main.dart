@@ -282,19 +282,23 @@ class CartState {
   CartState._internal();
 
   int burgerCount = 0;
+  int customBurgerCount = 0;
   int friesCount = 0;
   int colaCount = 0;
   int fantaCount = 0;
   int waterCount = 0;
-  List<Map<String, dynamic>> burgerOrders = [];
+  List<Map<String, dynamic>> burgerOrders = [];  // Classic burgers
+  List<Map<String, dynamic>> customBurgerOrders = [];  // Custom burgers
 
   void reset() {
     burgerCount = 0;
+    customBurgerCount = 0;
     friesCount = 0;
     colaCount = 0;
     fantaCount = 0;
     waterCount = 0;
     burgerOrders = [];
+    customBurgerOrders = [];
   }
 }
 
@@ -562,7 +566,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
   final CartState _cart = CartState();
 
   // Item prices
-  final double burgerPrice = 7.99;
+  final double burgerPrice = 14.99;
+  final double customBurgerPrice = 7.99;
   final double friesPrice = 3.99;
   final double colaPrice = 2.49;
   final double fantaPrice = 2.49;
@@ -570,6 +575,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
 
   double get totalPrice {
     return (_cart.burgerCount * burgerPrice) +
+        (_cart.customBurgerCount * customBurgerPrice) +
         (_cart.friesCount * friesPrice) +
         (_cart.colaCount * colaPrice) +
         (_cart.fantaCount * fantaPrice) +
@@ -577,7 +583,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
   }
 
   int get totalItems {
-    return _cart.burgerCount + _cart.friesCount + _cart.colaCount + _cart.fantaCount + _cart.waterCount;
+    return _cart.burgerCount + _cart.customBurgerCount + _cart.friesCount + _cart.colaCount + _cart.fantaCount + _cart.waterCount;
   }
 
   void viewCart() {
@@ -588,11 +594,17 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
       return;
     }
 
+    // Combine classic and custom burger orders for the cart
+    final allBurgerOrders = [
+      ..._cart.burgerOrders.map((b) => {...b, 'type': 'classic'}),
+      ..._cart.customBurgerOrders.map((b) => {...b, 'type': 'custom'}),
+    ];
+    
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CartPage(
-          burgerOrders: _cart.burgerOrders,
+          burgerOrders: allBurgerOrders,
           friesCount: _cart.friesCount,
           colaCount: _cart.colaCount,
           fantaCount: _cart.fantaCount,
@@ -642,8 +654,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
           ingredients: ingredients,
           onAdd: (customizedIngredients) {
             setState(() {
-              _cart.burgerCount++;
-              _cart.burgerOrders.add({
+              _cart.customBurgerCount++;
+              _cart.customBurgerOrders.add({
                 'ingredients': Map<String, bool>.from(customizedIngredients),
               });
             });
@@ -801,19 +813,113 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _showBurgerCustomization,
-                icon: const Icon(Icons.edit),
-                label: const Text('Customize Burger'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomBurgerCard() {
+    return Card(
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.orange[100],
+                    child: Icon(
+                      Icons.edit_note,
+                      size: 40,
+                      color: Colors.orange[600],
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                // Item details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Custom Burger',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '€${customBurgerPrice.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Build your own burger',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Counter controls
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          if (_cart.customBurgerCount > 0) {
+                            _cart.customBurgerCount--;
+                            if (_cart.customBurgerOrders.isNotEmpty) {
+                              _cart.customBurgerOrders.removeLast();
+                            }
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.remove_circle_outline),
+                      color: Colors.red,
+                      iconSize: 28,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${_cart.customBurgerCount}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _showBurgerCustomization,
+                      icon: const Icon(Icons.add_circle_outline),
+                      color: Colors.green,
+                      iconSize: 28,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -960,6 +1066,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
       case 'Burgers':
         return [
           _buildBurgerCard(),
+          const SizedBox(height: 16),
+          _buildCustomBurgerCard(),
         ];
       case 'Sides':
         return [
@@ -1600,6 +1708,11 @@ class _CartPageState extends State<CartPage> {
                         .map((e) => e.key)
                         .toList();
 
+                    // Determine if it's a classic or custom burger
+                    final isClassic = order['type'] == 'classic';
+                    final burgerName = isClassic ? 'Classic Burger' : 'Custom Burger';
+                    final burgerPriceValue = isClassic ? widget.burgerPrice : 7.99;
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: Padding(
@@ -1611,14 +1724,14 @@ class _CartPageState extends State<CartPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Classic Burger #${index + 1}',
+                                  '$burgerName #${index + 1}',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 Text(
-                                  '€${widget.burgerPrice.toStringAsFixed(2)}',
+                                  '€${burgerPriceValue.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
