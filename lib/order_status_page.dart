@@ -648,6 +648,10 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
         .where((e) => e.value == true)
         .map((e) => e.key)
         .toList();
+    
+    // Determine if it's a classic or custom burger
+    final isClassic = burger['type'] == 'classic';
+    final burgerName = isClassic ? 'Classic Burger' : 'Custom Burger';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -665,7 +669,7 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
               const Text('🍔', style: TextStyle(fontSize: 28)),
               const SizedBox(width: 12),
               Text(
-                'Burger #$number',
+                '$burgerName #$number',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

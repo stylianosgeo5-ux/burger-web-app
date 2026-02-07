@@ -1331,6 +1331,26 @@ class _CartPageState extends State<CartPage> {
     super.dispose();
   }
   
+  void _editCustomBurger(int index, Map<String, dynamic> order) {
+    final currentIngredients = Map<String, bool>.from(order['ingredients'] as Map<String, bool>);
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BurgerCustomizationPage(
+          ingredients: currentIngredients,
+          isEditing: true,
+          onAdd: (updatedIngredients) {
+            setState(() {
+              // Update the burger in the list
+              widget.burgerOrders[index]['ingredients'] = Map<String, bool>.from(updatedIngredients);
+            });
+          },
+        ),
+      ),
+    );
+  }
+  
   Future<void> _applyDiscountCode() async {
     final code = _discountCodeController.text.trim().toUpperCase();
     if (code.isEmpty) {
@@ -1730,13 +1750,27 @@ class _CartPageState extends State<CartPage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Text(
-                                  '€${burgerPriceValue.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.green,
-                                  ),
+                                Row(
+                                  children: [
+                                    if (!isClassic)
+                                      IconButton(
+                                        onPressed: () => _editCustomBurger(index, order),
+                                        icon: const Icon(Icons.edit, size: 20),
+                                        color: Colors.orange,
+                                        tooltip: 'Edit burger',
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '€${burgerPriceValue.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -1975,11 +2009,13 @@ class _CartPageState extends State<CartPage> {
 class BurgerCustomizationPage extends StatefulWidget {
   final Map<String, bool> ingredients;
   final Function(Map<String, bool>) onAdd;
+  final bool isEditing;
 
   const BurgerCustomizationPage({
     super.key,
     required this.ingredients,
     required this.onAdd,
+    this.isEditing = false,
   });
 
   @override
@@ -2072,8 +2108,10 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
                   widget.onAdd(_ingredients);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✓ Customized burger added to cart!'),
+                    SnackBar(
+                      content: Text(widget.isEditing 
+                        ? '✓ Burger updated!' 
+                        : '✓ Customized burger added to cart!'),
                       backgroundColor: Colors.green,
                       duration: Duration(seconds: 2),
                     ),
@@ -2084,8 +2122,8 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Add to Cart',
+                child: Text(
+                  widget.isEditing ? 'Save Changes' : 'Add to Cart',
                   style: TextStyle(fontSize: 18),
                 ),
               ),
