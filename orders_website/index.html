@@ -809,8 +809,23 @@
                 if (order.colaCount > 0) {
                     itemsHTML += `<div class="order-item"><span>🥤 Coca Cola</span><span>x${order.colaCount}</span></div>`;
                 }
+                if (order.colaZeroCount > 0) {
+                    itemsHTML += `<div class="order-item"><span>🥤 Coca Cola Zero</span><span>x${order.colaZeroCount}</span></div>`;
+                }
+                if (order.pepsiCount > 0) {
+                    itemsHTML += `<div class="order-item"><span>🥤 Pepsi</span><span>x${order.pepsiCount}</span></div>`;
+                }
+                if (order.pepsiZeroCount > 0) {
+                    itemsHTML += `<div class="order-item"><span>🥤 Pepsi Zero</span><span>x${order.pepsiZeroCount}</span></div>`;
+                }
                 if (order.fantaCount > 0) {
                     itemsHTML += `<div class="order-item"><span>🧃 Fanta</span><span>x${order.fantaCount}</span></div>`;
+                }
+                if (order.spriteCount > 0) {
+                    itemsHTML += `<div class="order-item"><span>🥤 Sprite</span><span>x${order.spriteCount}</span></div>`;
+                }
+                if (order.spriteZeroCount > 0) {
+                    itemsHTML += `<div class="order-item"><span>🥤 Sprite Zero</span><span>x${order.spriteZeroCount}</span></div>`;
                 }
                 if (order.waterCount > 0) {
                     itemsHTML += `<div class="order-item"><span>💧 Water</span><span>x${order.waterCount}</span></div>`;

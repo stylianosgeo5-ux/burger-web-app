@@ -561,7 +561,12 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
     final burgerOrders = (widget.order['burgerOrders'] as List?) ?? [];
     final friesCount = widget.order['friesCount'] ?? 0;
     final colaCount = widget.order['colaCount'] ?? 0;
+    final colaZeroCount = widget.order['colaZeroCount'] ?? 0;
+    final pepsiCount = widget.order['pepsiCount'] ?? 0;
+    final pepsiZeroCount = widget.order['pepsiZeroCount'] ?? 0;
     final fantaCount = widget.order['fantaCount'] ?? 0;
+    final spriteCount = widget.order['spriteCount'] ?? 0;
+    final spriteZeroCount = widget.order['spriteZeroCount'] ?? 0;
     final waterCount = widget.order['waterCount'] ?? 0;
 
     return Card(
@@ -584,7 +589,12 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
             }).toList(),
             if (friesCount > 0) _buildItemRow('🍟', 'French Fries', friesCount),
             if (colaCount > 0) _buildItemRow('🥤', 'Coca Cola', colaCount),
+            if (colaZeroCount > 0) _buildItemRow('🥤', 'Coca Cola Zero', colaZeroCount),
+            if (pepsiCount > 0) _buildItemRow('🥤', 'Pepsi', pepsiCount),
+            if (pepsiZeroCount > 0) _buildItemRow('🥤', 'Pepsi Zero', pepsiZeroCount),
             if (fantaCount > 0) _buildItemRow('🧃', 'Fanta', fantaCount),
+            if (spriteCount > 0) _buildItemRow('🥤', 'Sprite', spriteCount),
+            if (spriteZeroCount > 0) _buildItemRow('🥤', 'Sprite Zero', spriteZeroCount),
             if (waterCount > 0) _buildItemRow('💧', 'Water', waterCount),
             const Divider(height: 32),
             Row(
