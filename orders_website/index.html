@@ -785,6 +785,11 @@
                 const orderNumber = orders.length - index;
                 let itemsHTML = '';
 
+                // Item prices
+                const burgerPrice = 14.99;
+                const friesPrice = 2.80;
+                const drinkPrice = 1.20;
+
                 // Burgers
                 if (order.burgerOrders && order.burgerOrders.length > 0) {
                     itemsHTML += order.burgerOrders.map((burger, idx) => {
@@ -793,9 +798,14 @@
                             .map(([name, _]) => name)
                             .join(', ');
                         
+                        // Determine burger type and price
+                        const isCustom = burger.type === 'custom';
+                        const price = isCustom ? (burger.price || 4.0) : burgerPrice;
+                        const burgerType = isCustom ? 'Custom Burger' : 'Classic Burger';
+                        
                         return `
                             <div class="burger-item">
-                                <div class="burger-title">🍔 Burger ${idx + 1}</div>
+                                <div class="burger-title">🍔 ${burgerType} ${idx + 1} - €${price.toFixed(2)}</div>
                                 ${ingredients ? `<div class="ingredients">${ingredients}</div>` : ''}
                             </div>
                         `;
@@ -804,31 +814,40 @@
 
                 // Sides and Drinks
                 if (order.friesCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🍟 French Fries</span><span>x${order.friesCount}</span></div>`;
+                    const totalFries = friesPrice * order.friesCount;
+                    itemsHTML += `<div class="order-item"><span>🍟 French Fries x${order.friesCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalFries.toFixed(2)}</span></div>`;
                 }
                 if (order.colaCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🥤 Coca Cola</span><span>x${order.colaCount}</span></div>`;
+                    const totalCola = drinkPrice * order.colaCount;
+                    itemsHTML += `<div class="order-item"><span>🥤 Coca Cola x${order.colaCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalCola.toFixed(2)}</span></div>`;
                 }
                 if (order.colaZeroCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🥤 Coca Cola Zero</span><span>x${order.colaZeroCount}</span></div>`;
+                    const totalColaZero = drinkPrice * order.colaZeroCount;
+                    itemsHTML += `<div class="order-item"><span>🥤 Coca Cola Zero x${order.colaZeroCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalColaZero.toFixed(2)}</span></div>`;
                 }
                 if (order.pepsiCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🥤 Pepsi</span><span>x${order.pepsiCount}</span></div>`;
+                    const totalPepsi = drinkPrice * order.pepsiCount;
+                    itemsHTML += `<div class="order-item"><span>🥤 Pepsi x${order.pepsiCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalPepsi.toFixed(2)}</span></div>`;
                 }
                 if (order.pepsiZeroCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🥤 Pepsi Zero</span><span>x${order.pepsiZeroCount}</span></div>`;
+                    const totalPepsiZero = drinkPrice * order.pepsiZeroCount;
+                    itemsHTML += `<div class="order-item"><span>🥤 Pepsi Zero x${order.pepsiZeroCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalPepsiZero.toFixed(2)}</span></div>`;
                 }
                 if (order.fantaCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🧃 Fanta</span><span>x${order.fantaCount}</span></div>`;
+                    const totalFanta = drinkPrice * order.fantaCount;
+                    itemsHTML += `<div class="order-item"><span>🧃 Fanta x${order.fantaCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalFanta.toFixed(2)}</span></div>`;
                 }
                 if (order.spriteCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🥤 Sprite</span><span>x${order.spriteCount}</span></div>`;
+                    const totalSprite = drinkPrice * order.spriteCount;
+                    itemsHTML += `<div class="order-item"><span>🥤 Sprite x${order.spriteCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalSprite.toFixed(2)}</span></div>`;
                 }
                 if (order.spriteZeroCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>🥤 Sprite Zero</span><span>x${order.spriteZeroCount}</span></div>`;
+                    const totalSpriteZero = drinkPrice * order.spriteZeroCount;
+                    itemsHTML += `<div class="order-item"><span>🥤 Sprite Zero x${order.spriteZeroCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalSpriteZero.toFixed(2)}</span></div>`;
                 }
                 if (order.waterCount > 0) {
-                    itemsHTML += `<div class="order-item"><span>💧 Water</span><span>x${order.waterCount}</span></div>`;
+                    const totalWater = drinkPrice * order.waterCount;
+                    itemsHTML += `<div class="order-item"><span>💧 Water x${order.waterCount}</span><span style="font-weight: bold; color: #27ae60;">€${totalWater.toFixed(2)}</span></div>`;
                 }
 
                 // Location
@@ -1570,12 +1589,10 @@
             const order = orders.slice().reverse()[index];
             const orderNumber = orders.length - index;
             
-            // Item prices
-            const burgerPrice = 7.99;
-            const friesPrice = 3.99;
-            const colaPrice = 2.49;
-            const fantaPrice = 2.49;
-            const waterPrice = 1.99;
+            // Item prices (matching app prices)
+            const classicBurgerPrice = 14.99;
+            const friesPrice = 2.80;
+            const drinkPrice = 1.20;
             
             // Build items list with prices
             let itemsList = '';
@@ -1587,8 +1604,13 @@
                         .map(([name, _]) => name)
                         .join(', ');
                     
+                    // Determine burger type and price
+                    const isCustom = burger.type === 'custom';
+                    const burgerPrice = isCustom ? (burger.price || 4.0) : classicBurgerPrice;
+                    const burgerType = isCustom ? 'Custom Burger' : 'Classic Burger';
+                    
                     itemsList += `<div style="margin-bottom: 10px;">`;
-                    itemsList += `<div style="font-weight: bold; font-size: 14px;">Burger ${idx + 1} - €${burgerPrice.toFixed(2)}</div>`;
+                    itemsList += `<div style="font-weight: bold; font-size: 14px;">${burgerType} ${idx + 1} - €${burgerPrice.toFixed(2)}</div>`;
                     itemsList += `<div style="font-size: 11px; margin-top: 2px;">${ingredients || 'Standard'}</div>`;
                     itemsList += `</div>`;
                 });
@@ -1599,15 +1621,35 @@
                 itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">French Fries x${order.friesCount} - €${totalFries.toFixed(2)}</div>`;
             }
             if (order.colaCount > 0) {
-                const totalCola = colaPrice * order.colaCount;
+                const totalCola = drinkPrice * order.colaCount;
                 itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Coca Cola x${order.colaCount} - €${totalCola.toFixed(2)}</div>`;
             }
+            if (order.colaZeroCount > 0) {
+                const totalColaZero = drinkPrice * order.colaZeroCount;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Coca Cola Zero x${order.colaZeroCount} - €${totalColaZero.toFixed(2)}</div>`;
+            }
+            if (order.pepsiCount > 0) {
+                const totalPepsi = drinkPrice * order.pepsiCount;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Pepsi x${order.pepsiCount} - €${totalPepsi.toFixed(2)}</div>`;
+            }
+            if (order.pepsiZeroCount > 0) {
+                const totalPepsiZero = drinkPrice * order.pepsiZeroCount;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Pepsi Zero x${order.pepsiZeroCount} - €${totalPepsiZero.toFixed(2)}</div>`;
+            }
             if (order.fantaCount > 0) {
-                const totalFanta = fantaPrice * order.fantaCount;
+                const totalFanta = drinkPrice * order.fantaCount;
                 itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Fanta x${order.fantaCount} - €${totalFanta.toFixed(2)}</div>`;
             }
+            if (order.spriteCount > 0) {
+                const totalSprite = drinkPrice * order.spriteCount;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Sprite x${order.spriteCount} - €${totalSprite.toFixed(2)}</div>`;
+            }
+            if (order.spriteZeroCount > 0) {
+                const totalSpriteZero = drinkPrice * order.spriteZeroCount;
+                itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Sprite Zero x${order.spriteZeroCount} - €${totalSpriteZero.toFixed(2)}</div>`;
+            }
             if (order.waterCount > 0) {
-                const totalWater = waterPrice * order.waterCount;
+                const totalWater = drinkPrice * order.waterCount;
                 itemsList += `<div style="margin-bottom: 8px; font-weight: bold; font-size: 14px;">Water x${order.waterCount} - €${totalWater.toFixed(2)}</div>`;
             }
             

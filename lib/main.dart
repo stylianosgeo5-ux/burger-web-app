@@ -285,7 +285,12 @@ class CartState {
   int customBurgerCount = 0;
   int friesCount = 0;
   int colaCount = 0;
+  int colaZeroCount = 0;
+  int pepsiCount = 0;
+  int pepsiZeroCount = 0;
   int fantaCount = 0;
+  int spriteCount = 0;
+  int spriteZeroCount = 0;
   int waterCount = 0;
   List<Map<String, dynamic>> burgerOrders = [];  // Classic burgers
   List<Map<String, dynamic>> customBurgerOrders = [];  // Custom burgers
@@ -295,7 +300,12 @@ class CartState {
     customBurgerCount = 0;
     friesCount = 0;
     colaCount = 0;
+    colaZeroCount = 0;
+    pepsiCount = 0;
+    pepsiZeroCount = 0;
     fantaCount = 0;
+    spriteCount = 0;
+    spriteZeroCount = 0;
     waterCount = 0;
     burgerOrders = [];
     customBurgerOrders = [];
@@ -567,23 +577,28 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
 
   // Item prices
   final double burgerPrice = 14.99;
-  final double customBurgerPrice = 7.99;
-  final double friesPrice = 3.99;
-  final double colaPrice = 2.49;
-  final double fantaPrice = 2.49;
-  final double waterPrice = 1.99;
+  final double customBurgerBasePrice = 4.0;
+  final double friesPrice = 2.80;
+  final double drinkPrice = 1.20;  // All drinks same price
 
   double get totalPrice {
+    double customBurgersTotal = 0;
+    for (var burger in _cart.customBurgerOrders) {
+      customBurgersTotal += burger['price'] ?? customBurgerBasePrice;
+    }
+    int totalDrinks = _cart.colaCount + _cart.colaZeroCount + _cart.pepsiCount + 
+                      _cart.pepsiZeroCount + _cart.fantaCount + _cart.spriteCount + 
+                      _cart.spriteZeroCount + _cart.waterCount;
     return (_cart.burgerCount * burgerPrice) +
-        (_cart.customBurgerCount * customBurgerPrice) +
+        customBurgersTotal +
         (_cart.friesCount * friesPrice) +
-        (_cart.colaCount * colaPrice) +
-        (_cart.fantaCount * fantaPrice) +
-        (_cart.waterCount * waterPrice);
+        (totalDrinks * drinkPrice);
   }
 
   int get totalItems {
-    return _cart.burgerCount + _cart.customBurgerCount + _cart.friesCount + _cart.colaCount + _cart.fantaCount + _cart.waterCount;
+    return _cart.burgerCount + _cart.customBurgerCount + _cart.friesCount + 
+           _cart.colaCount + _cart.colaZeroCount + _cart.pepsiCount + _cart.pepsiZeroCount + 
+           _cart.fantaCount + _cart.spriteCount + _cart.spriteZeroCount + _cart.waterCount;
   }
 
   void viewCart() {
@@ -607,13 +622,16 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
           burgerOrders: allBurgerOrders,
           friesCount: _cart.friesCount,
           colaCount: _cart.colaCount,
+          colaZeroCount: _cart.colaZeroCount,
+          pepsiCount: _cart.pepsiCount,
+          pepsiZeroCount: _cart.pepsiZeroCount,
           fantaCount: _cart.fantaCount,
+          spriteCount: _cart.spriteCount,
+          spriteZeroCount: _cart.spriteZeroCount,
           waterCount: _cart.waterCount,
           burgerPrice: burgerPrice,
           friesPrice: friesPrice,
-          colaPrice: colaPrice,
-          fantaPrice: fantaPrice,
-          waterPrice: waterPrice,
+          drinkPrice: drinkPrice,
           totalPrice: totalPrice,
           userName: widget.userName,
           userEmail: widget.userEmail,
@@ -634,17 +652,19 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
   }
 
   void _showBurgerCustomization() {
-    Map<String, bool> ingredients = {
-      'Mayo': true,
-      'Ketchup': true,
-      'Lettuce': true,
-      'Tomato': true,
-      'Pickle Cucumber': true,
-      'Onion': true,
-      'Bacon': true,
-      'Egg': true,
-      'Beef Patty': true,
-      'Extra Patty': false,
+    Map<String, dynamic> ingredients = {
+      'Mayo': {'included': false, 'price': 0.2, 'type': 'checkbox'},
+      'Ketchup': {'included': false, 'price': 0.2, 'type': 'checkbox'},
+      'Lettuce': {'included': false, 'price': 0.2, 'type': 'checkbox'},
+      'Tomato': {'included': false, 'price': 0.2, 'type': 'checkbox'},
+      'Pickle Cucumber': {'included': false, 'price': 0.2, 'type': 'checkbox'},
+      'Onion': {'included': false, 'price': 0.2, 'type': 'checkbox'},
+      'Caramelized Onion': {'included': false, 'price': 0.3, 'type': 'checkbox'},
+      'Bacon': {'quantity': 0, 'price': 0.75, 'type': 'quantity'},
+      'Egg': {'quantity': 0, 'price': 0.85, 'type': 'quantity'},
+      'Cheese': {'quantity': 0, 'price': 0.5, 'type': 'quantity'},
+      'Beef Patty': {'quantity': 0, 'price': 2.5, 'type': 'quantity', 'weight': '180 grams'},
+      'Pork Patty': {'quantity': 0, 'price': 2.0, 'type': 'quantity', 'weight': '180 grams'},
     };
 
     Navigator.push(
@@ -652,11 +672,12 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
       MaterialPageRoute(
         builder: (context) => BurgerCustomizationPage(
           ingredients: ingredients,
-          onAdd: (customizedIngredients) {
+          onAdd: (customizedIngredients, totalPrice) {
             setState(() {
               _cart.customBurgerCount++;
               _cart.customBurgerOrders.add({
-                'ingredients': Map<String, bool>.from(customizedIngredients),
+                'ingredients': Map<String, dynamic>.from(customizedIngredients),
+                'price': totalPrice,
               });
             });
           },
@@ -692,7 +713,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
-                    'assets/images/burger.jpg',
+                    'assets/images/burger.jpg.png',
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
@@ -859,7 +880,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '€${customBurgerPrice.toStringAsFixed(2)}',
+                        'From €${customBurgerBasePrice.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[700],
@@ -1089,7 +1110,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             'French Fries',
             friesPrice,
             _cart.friesCount,
-            'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400',
+            'assets/images/fries.jpg.png',
             () => setState(() => _cart.friesCount++),
             () => setState(
                 () => _cart.friesCount = _cart.friesCount > 0 ? _cart.friesCount - 1 : 0),
@@ -1099,28 +1120,73 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
         return [
           _buildItemCard(
             'Coca Cola',
-            colaPrice,
+            drinkPrice,
             _cart.colaCount,
-            'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400',
+            'assets/images/coca_cola.jpg.png',
             () => setState(() => _cart.colaCount++),
             () => setState(() => _cart.colaCount = _cart.colaCount > 0 ? _cart.colaCount - 1 : 0),
           ),
           const SizedBox(height: 16),
           _buildItemCard(
+            'Coca Cola Zero',
+            drinkPrice,
+            _cart.colaZeroCount,
+            'assets/images/coca_cola_zero.jpg.png',
+            () => setState(() => _cart.colaZeroCount++),
+            () => setState(() => _cart.colaZeroCount = _cart.colaZeroCount > 0 ? _cart.colaZeroCount - 1 : 0),
+          ),
+          const SizedBox(height: 16),
+          _buildItemCard(
+            'Pepsi',
+            drinkPrice,
+            _cart.pepsiCount,
+            'assets/images/pepsi.jpg.png',
+            () => setState(() => _cart.pepsiCount++),
+            () => setState(() => _cart.pepsiCount = _cart.pepsiCount > 0 ? _cart.pepsiCount - 1 : 0),
+          ),
+          const SizedBox(height: 16),
+          _buildItemCard(
+            'Pepsi Zero',
+            drinkPrice,
+            _cart.pepsiZeroCount,
+            'assets/images/pepsi_zero.jpg.png',
+            () => setState(() => _cart.pepsiZeroCount++),
+            () => setState(() => _cart.pepsiZeroCount = _cart.pepsiZeroCount > 0 ? _cart.pepsiZeroCount - 1 : 0),
+          ),
+          const SizedBox(height: 16),
+          _buildItemCard(
             'Fanta',
-            fantaPrice,
+            drinkPrice,
             _cart.fantaCount,
-            'https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=400',
+            'assets/images/fanta.jpg.png',
             () => setState(() => _cart.fantaCount++),
             () => setState(
                 () => _cart.fantaCount = _cart.fantaCount > 0 ? _cart.fantaCount - 1 : 0),
           ),
           const SizedBox(height: 16),
           _buildItemCard(
+            'Sprite',
+            drinkPrice,
+            _cart.spriteCount,
+            'assets/images/sprite.jpg.png',
+            () => setState(() => _cart.spriteCount++),
+            () => setState(() => _cart.spriteCount = _cart.spriteCount > 0 ? _cart.spriteCount - 1 : 0),
+          ),
+          const SizedBox(height: 16),
+          _buildItemCard(
+            'Sprite Zero',
+            drinkPrice,
+            _cart.spriteZeroCount,
+            'assets/images/sprite_zero.jpg.png',
+            () => setState(() => _cart.spriteZeroCount++),
+            () => setState(() => _cart.spriteZeroCount = _cart.spriteZeroCount > 0 ? _cart.spriteZeroCount - 1 : 0),
+          ),
+          const SizedBox(height: 16),
+          _buildItemCard(
             'Water',
-            waterPrice,
+            drinkPrice,
             _cart.waterCount,
-            'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400',
+            'assets/images/water.jpg.png',
             () => setState(() => _cart.waterCount++),
             () => setState(
                 () => _cart.waterCount = _cart.waterCount > 0 ? _cart.waterCount - 1 : 0),
@@ -1158,40 +1224,70 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
             // Product Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
+              child: imageUrl.isEmpty 
+                ? Container(
                     width: 80,
                     height: 80,
                     color: Colors.grey[300],
                     child: Icon(
-                      Icons.fastfood,
+                      Icons.local_drink,
                       size: 40,
                       color: Colors.grey[600],
                     ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    width: 80,
-                    height: 80,
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
+                  )
+                : imageUrl.startsWith('assets/')
+                  ? Image.asset(
+                      imageUrl,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.local_drink,
+                            size: 40,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      },
+                    )
+                  : Image.network(
+                      imageUrl,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.fastfood,
+                            size: 40,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
             const SizedBox(width: 16),
             // Item details
@@ -1286,13 +1382,16 @@ class CartPage extends StatefulWidget {
   final List<Map<String, dynamic>> burgerOrders;
   final int friesCount;
   final int colaCount;
+  final int colaZeroCount;
+  final int pepsiCount;
+  final int pepsiZeroCount;
   final int fantaCount;
+  final int spriteCount;
+  final int spriteZeroCount;
   final int waterCount;
   final double burgerPrice;
   final double friesPrice;
-  final double colaPrice;
-  final double fantaPrice;
-  final double waterPrice;
+  final double drinkPrice;
   final double totalPrice;
   final String userName;
   final String userEmail;
@@ -1306,13 +1405,16 @@ class CartPage extends StatefulWidget {
     required this.burgerOrders,
     required this.friesCount,
     required this.colaCount,
+    required this.colaZeroCount,
+    required this.pepsiCount,
+    required this.pepsiZeroCount,
     required this.fantaCount,
+    required this.spriteCount,
+    required this.spriteZeroCount,
     required this.waterCount,
     required this.burgerPrice,
     required this.friesPrice,
-    required this.colaPrice,
-    required this.fantaPrice,
-    required this.waterPrice,
+    required this.drinkPrice,
     required this.totalPrice,
     required this.userName,
     required this.userEmail,
@@ -1339,6 +1441,31 @@ class _CartPageState extends State<CartPage> {
   // Loading state to prevent duplicate orders
   bool _isPlacingOrder = false;
   
+  double _calculateTotalPrice() {
+    double total = 0;
+    
+    // Add burger prices
+    for (var order in widget.burgerOrders) {
+      final isClassic = order['type'] == 'classic';
+      if (isClassic) {
+        total += widget.burgerPrice;
+      } else {
+        total += order['price'] ?? 4.0;
+      }
+    }
+    
+    // Add other items
+    total += widget.friesCount * widget.friesPrice;
+    
+    // Add all drinks
+    int totalDrinks = widget.colaCount + widget.colaZeroCount + widget.pepsiCount + 
+                      widget.pepsiZeroCount + widget.fantaCount + widget.spriteCount + 
+                      widget.spriteZeroCount + widget.waterCount;
+    total += totalDrinks * widget.drinkPrice;
+    
+    return total;
+  }
+  
   @override
   void dispose() {
     _discountCodeController.dispose();
@@ -1346,7 +1473,7 @@ class _CartPageState extends State<CartPage> {
   }
   
   void _editCustomBurger(int index, Map<String, dynamic> order) {
-    final currentIngredients = Map<String, bool>.from(order['ingredients'] as Map<String, bool>);
+    final currentIngredients = Map<String, dynamic>.from(order['ingredients'] as Map<String, dynamic>);
     
     Navigator.push(
       context,
@@ -1354,10 +1481,11 @@ class _CartPageState extends State<CartPage> {
         builder: (context) => BurgerCustomizationPage(
           ingredients: currentIngredients,
           isEditing: true,
-          onAdd: (updatedIngredients) {
+          onAdd: (updatedIngredients, totalPrice) {
             setState(() {
               // Update the burger in the list
-              widget.burgerOrders[index]['ingredients'] = Map<String, bool>.from(updatedIngredients);
+              widget.burgerOrders[index]['ingredients'] = Map<String, dynamic>.from(updatedIngredients);
+              widget.burgerOrders[index]['price'] = totalPrice;
             });
           },
         ),
@@ -1388,7 +1516,7 @@ class _CartPageState extends State<CartPage> {
         if (data['valid'] == true) {
           setState(() {
             _discountApplied = true;
-            _discountAmount = (widget.totalPrice * data['discountPercent'] / 100);
+            _discountAmount = (_calculateTotalPrice() * data['discountPercent'] / 100);
             _discountMessage = '✓ ${data['discountPercent']}% discount applied!';
           });
         } else {
@@ -1495,16 +1623,21 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _completeOrder() {
-    final finalPrice = widget.totalPrice - _discountAmount;
+    final finalPrice = _calculateTotalPrice() - _discountAmount;
     final order = {
       'timestamp': DateTime.now().toString(),
       'burgerOrders': List.from(widget.burgerOrders),
       'friesCount': widget.friesCount,
       'colaCount': widget.colaCount,
+      'colaZeroCount': widget.colaZeroCount,
+      'pepsiCount': widget.pepsiCount,
+      'pepsiZeroCount': widget.pepsiZeroCount,
       'fantaCount': widget.fantaCount,
+      'spriteCount': widget.spriteCount,
+      'spriteZeroCount': widget.spriteZeroCount,
       'waterCount': widget.waterCount,
       'totalPrice': finalPrice,
-      'originalPrice': widget.totalPrice,
+      'originalPrice': _calculateTotalPrice(),
       'discountAmount': _discountAmount,
       'discountCode': _discountApplied ? _discountCodeController.text.trim().toUpperCase() : null,
       'paymentMethod': _selectedPaymentMethod,
@@ -1735,17 +1868,37 @@ class _CartPageState extends State<CartPage> {
                   ...widget.burgerOrders.asMap().entries.map((entry) {
                     int index = entry.key;
                     Map<String, dynamic> order = entry.value;
-                    Map<String, bool> ingredients =
-                        order['ingredients'] as Map<String, bool>;
-                    List<String> selectedIngredients = ingredients.entries
-                        .where((e) => e.value)
-                        .map((e) => e.key)
-                        .toList();
-
+                    
                     // Determine if it's a classic or custom burger
                     final isClassic = order['type'] == 'classic';
                     final burgerName = isClassic ? 'Classic Burger' : 'Custom Burger';
-                    final burgerPriceValue = isClassic ? widget.burgerPrice : 7.99;
+                    final burgerPriceValue = isClassic ? widget.burgerPrice : (order['price'] ?? 4.0);
+                    
+                    // Extract ingredients for display
+                    List<String> ingredientsList = [];
+                    if (isClassic) {
+                      // Classic burger - old format with Map<String, bool>
+                      Map<String, bool> ingredients = order['ingredients'] as Map<String, bool>;
+                      ingredientsList = ingredients.entries
+                          .where((e) => e.value)
+                          .map((e) => e.key)
+                          .toList();
+                    } else {
+                      // Custom burger - new format with Map<String, dynamic>
+                      Map<String, dynamic> ingredients = order['ingredients'] as Map<String, dynamic>;
+                      ingredients.forEach((name, data) {
+                        if (data is Map) {
+                          if (data['type'] == 'checkbox' && data['included'] == true) {
+                            ingredientsList.add(name);
+                          } else if (data['type'] == 'quantity' && (data['quantity'] as int) > 0) {
+                            ingredientsList.add('$name x${data['quantity']}');
+                          }
+                        } else if (data is bool && data == true) {
+                          // Backward compatibility for old format
+                          ingredientsList.add(name);
+                        }
+                      });
+                    }
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -1792,7 +1945,7 @@ class _CartPageState extends State<CartPage> {
                             Wrap(
                               spacing: 4,
                               runSpacing: 4,
-                              children: selectedIngredients.map((ingredient) {
+                              children: ingredientsList.map((ingredient) {
                                 return Chip(
                                   label: Text(
                                     ingredient,
@@ -1816,11 +1969,21 @@ class _CartPageState extends State<CartPage> {
                 if (widget.friesCount > 0)
                   _buildCartItem('French Fries', widget.friesCount, widget.friesPrice),
                 if (widget.colaCount > 0)
-                  _buildCartItem('Coca Cola', widget.colaCount, widget.colaPrice),
+                  _buildCartItem('Coca Cola', widget.colaCount, widget.drinkPrice),
+                if (widget.colaZeroCount > 0)
+                  _buildCartItem('Coca Cola Zero', widget.colaZeroCount, widget.drinkPrice),
+                if (widget.pepsiCount > 0)
+                  _buildCartItem('Pepsi', widget.pepsiCount, widget.drinkPrice),
+                if (widget.pepsiZeroCount > 0)
+                  _buildCartItem('Pepsi Zero', widget.pepsiZeroCount, widget.drinkPrice),
                 if (widget.fantaCount > 0)
-                  _buildCartItem('Fanta', widget.fantaCount, widget.fantaPrice),
+                  _buildCartItem('Fanta', widget.fantaCount, widget.drinkPrice),
+                if (widget.spriteCount > 0)
+                  _buildCartItem('Sprite', widget.spriteCount, widget.drinkPrice),
+                if (widget.spriteZeroCount > 0)
+                  _buildCartItem('Sprite Zero', widget.spriteZeroCount, widget.drinkPrice),
                 if (widget.waterCount > 0)
-                  _buildCartItem('Water', widget.waterCount, widget.waterPrice),
+                  _buildCartItem('Water', widget.waterCount, widget.drinkPrice),
               ],
             ),
           ),
@@ -1849,7 +2012,7 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                       Text(
-                        '€${widget.totalPrice.toStringAsFixed(2)}',
+                        '€${_calculateTotalPrice().toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 18,
                           decoration: TextDecoration.lineThrough,
@@ -1892,7 +2055,7 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ),
                     Text(
-                      '€${(widget.totalPrice - _discountAmount).toStringAsFixed(2)}',
+                      '€${(_calculateTotalPrice() - _discountAmount).toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -2021,8 +2184,8 @@ class _CartPageState extends State<CartPage> {
 }
 
 class BurgerCustomizationPage extends StatefulWidget {
-  final Map<String, bool> ingredients;
-  final Function(Map<String, bool>) onAdd;
+  final Map<String, dynamic> ingredients;
+  final Function(Map<String, dynamic>, double) onAdd;
   final bool isEditing;
 
   const BurgerCustomizationPage({
@@ -2038,16 +2201,33 @@ class BurgerCustomizationPage extends StatefulWidget {
 }
 
 class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
-  late Map<String, bool> _ingredients;
+  late Map<String, dynamic> _ingredients;
+  final double _basePrice = 4.0;
 
   @override
   void initState() {
     super.initState();
-    _ingredients = Map<String, bool>.from(widget.ingredients);
+    _ingredients = Map<String, dynamic>.from(widget.ingredients.map(
+      (key, value) => MapEntry(key, Map<String, dynamic>.from(value))
+    ));
+  }
+
+  double _calculateTotalPrice() {
+    double total = _basePrice;
+    _ingredients.forEach((name, data) {
+      if (data['type'] == 'checkbox' && data['included'] == true) {
+        total += data['price'];
+      } else if (data['type'] == 'quantity') {
+        total += data['quantity'] * data['price'];
+      }
+    });
+    return total;
   }
 
   @override
   Widget build(BuildContext context) {
+    final totalPrice = _calculateTotalPrice();
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -2055,13 +2235,13 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
       ),
       body: Column(
         children: [
-          // Remove Ingredients Header
+          // Header
           Container(
             color: Colors.orange[50],
             padding: const EdgeInsets.all(24),
             width: double.infinity,
             child: const Text(
-              'Remove Ingredients',
+              'Build Your Burger',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
@@ -2074,29 +2254,143 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Vegetables & Sauces Section
                 const Text(
-                  'Select ingredients for your burger:',
+                  '🥬 Vegetables & Sauces',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Colors.orange,
                   ),
                 ),
-                const SizedBox(height: 16),
-                ..._ingredients.keys.map((ingredient) {
+                const SizedBox(height: 12),
+                ..._ingredients.entries
+                    .where((e) => e.value['type'] == 'checkbox')
+                    .map((entry) {
+                  final name = entry.key;
+                  final data = entry.value;
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: CheckboxListTile(
-                      title: Text(
-                        ingredient,
-                        style: const TextStyle(fontSize: 16),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            '+€${data['price'].toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      value: _ingredients[ingredient],
+                      value: data['included'],
                       onChanged: (value) {
                         setState(() {
-                          _ingredients[ingredient] = value ?? false;
+                          _ingredients[name]['included'] = value ?? false;
                         });
                       },
                       activeColor: Colors.orange,
+                    ),
+                  );
+                }).toList(),
+                const SizedBox(height: 24),
+                // Proteins Section
+                const Text(
+                  '🥓 Proteins & Extras',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ..._ingredients.entries
+                    .where((e) => e.value['type'] == 'quantity')
+                    .map((entry) {
+                  final name = entry.key;
+                  final data = entry.value;
+                  final quantity = data['quantity'] as int;
+                  final price = data['price'] as double;
+                  
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '€${price.toStringAsFixed(2)} each${data['weight'] != null ? ' (${data['weight']})' : ''}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: quantity > 0
+                                    ? () {
+                                        setState(() {
+                                          _ingredients[name]['quantity']--;
+                                        });
+                                      }
+                                    : null,
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: Colors.red,
+                                iconSize: 32,
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '$quantity',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _ingredients[name]['quantity']++;
+                                  });
+                                },
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: Colors.green,
+                                iconSize: 32,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -2115,32 +2409,65 @@ class _BurgerCustomizationPageState extends State<BurgerCustomizationPage> {
                 ),
               ],
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  widget.onAdd(_ingredients);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(widget.isEditing 
-                        ? '✓ Burger updated!' 
-                        : '✓ Customized burger added to cart!'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green, width: 2),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Price:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '€${totalPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onAdd(_ingredients, totalPrice);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(widget.isEditing 
+                            ? '✓ Burger updated!' 
+                            : '✓ Customized burger added to cart!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      widget.isEditing ? 'Save Changes' : 'Add to Cart',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
                 ),
-                child: Text(
-                  widget.isEditing ? 'Save Changes' : 'Add to Cart',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
+              ],
             ),
           ),
         ],
