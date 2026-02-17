@@ -793,10 +793,22 @@
                 // Burgers
                 if (order.burgerOrders && order.burgerOrders.length > 0) {
                     itemsHTML += order.burgerOrders.map((burger, idx) => {
-                        const ingredients = Object.entries(burger.ingredients || {})
-                            .filter(([_, selected]) => selected)
-                            .map(([name, _]) => name)
-                            .join(', ');
+                        // Extract ingredients handling both classic (boolean) and custom (object) formats
+                        const ingredientsList = [];
+                        Object.entries(burger.ingredients || {}).forEach(([name, value]) => {
+                            if (typeof value === 'boolean' && value) {
+                                // Classic burger format
+                                ingredientsList.push(name);
+                            } else if (typeof value === 'object') {
+                                // Custom burger format
+                                if (value.type === 'checkbox' && value.included === true) {
+                                    ingredientsList.push(name);
+                                } else if (value.type === 'quantity' && value.quantity > 0) {
+                                    ingredientsList.push(`${name} x${value.quantity}`);
+                                }
+                            }
+                        });
+                        const ingredients = ingredientsList.join(', ');
                         
                         // Determine burger type and price
                         const isCustom = burger.type === 'custom';
@@ -1599,10 +1611,22 @@
             
             if (order.burgerOrders && order.burgerOrders.length > 0) {
                 order.burgerOrders.forEach((burger, idx) => {
-                    const ingredients = Object.entries(burger.ingredients || {})
-                        .filter(([_, selected]) => selected)
-                        .map(([name, _]) => name)
-                        .join(', ');
+                    // Extract ingredients handling both classic (boolean) and custom (object) formats
+                    const ingredientsList = [];
+                    Object.entries(burger.ingredients || {}).forEach(([name, value]) => {
+                        if (typeof value === 'boolean' && value) {
+                            // Classic burger format
+                            ingredientsList.push(name);
+                        } else if (typeof value === 'object') {
+                            // Custom burger format
+                            if (value.type === 'checkbox' && value.included === true) {
+                                ingredientsList.push(name);
+                            } else if (value.type === 'quantity' && value.quantity > 0) {
+                                ingredientsList.push(`${name} x${value.quantity}`);
+                            }
+                        }
+                    });
+                    const ingredients = ingredientsList.join(', ');
                     
                     // Determine burger type and price
                     const isCustom = burger.type === 'custom';
