@@ -16,44 +16,38 @@ const HISTORY_FILE = path.join(DATA_DIR, 'fulfilled_orders_history.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const OPENING_HOURS_FILE = path.join(DATA_DIR, 'opening_hours.json');
 
+// Ensure data directory exists (for persistent storage)
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  console.log(`Created data directory: ${DATA_DIR}`);
+}
+
+// Helper function to initialize data files from repository defaults
+function initializeDataFile(filePath, defaultSourcePath) {
+  if (!fs.existsSync(filePath)) {
+    // Check if we have a source file in the repository to copy from
+    if (fs.existsSync(defaultSourcePath)) {
+      fs.copyFileSync(defaultSourcePath, filePath);
+      console.log(`Initialized ${path.basename(filePath)} from repository defaults`);
+    } else {
+      // Fallback: create empty array if no default exists
+      fs.writeFileSync(filePath, '[]');
+      console.log(`Created empty ${path.basename(filePath)}`);
+    }
+  }
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Initialize orders file if it doesn't exist
-if (!fs.existsSync(ORDERS_FILE)) {
-  fs.writeFileSync(ORDERS_FILE, '[]');
-}
-
-// Initialize discounts file if it doesn't exist
-if (!fs.existsSync(DISCOUNTS_FILE)) {
-  fs.writeFileSync(DISCOUNTS_FILE, '[]');
-}
-
-// Initialize history file if it doesn't exist
-if (!fs.existsSync(HISTORY_FILE)) {
-  fs.writeFileSync(HISTORY_FILE, '[]');
-}
-
-// Initialize users file if it doesn't exist
-if (!fs.existsSync(USERS_FILE)) {
-  fs.writeFileSync(USERS_FILE, '[]');
-}
-
-// Initialize opening hours file if it doesn't exist
-if (!fs.existsSync(OPENING_HOURS_FILE)) {
-  const defaultHours = {
-    "monday": "9:00 AM - 10:00 PM",
-    "tuesday": "9:00 AM - 10:00 PM",
-    "wednesday": "9:00 AM - 10:00 PM",
-    "thursday": "9:00 AM - 10:00 PM",
-    "friday": "9:00 AM - 11:00 PM",
-    "saturday": "10:00 AM - 11:00 PM",
-    "sunday": "10:00 AM - 9:00 PM"
-  };
-  fs.writeFileSync(OPENING_HOURS_FILE, JSON.stringify(defaultHours, null, 2));
-}
+// Initialize all data files with repository defaults if they don't exist
+initializeDataFile(ORDERS_FILE, path.join(__dirname, 'burger_orders.json'));
+initializeDataFile(DISCOUNTS_FILE, path.join(__dirname, 'discount_codes.json'));
+initializeDataFile(HISTORY_FILE, path.join(__dirname, 'fulfilled_orders_history.json'));
+initializeDataFile(USERS_FILE, path.join(__dirname, 'users.json'));
+initializeDataFile(OPENING_HOURS_FILE, path.join(__dirname, 'opening_hours.json'));
 
 // Helper function to hash passwords
 function hashPassword(password) {
