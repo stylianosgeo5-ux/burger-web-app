@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'order_status_page.dart';
 import 'multi_order_status_page.dart';
 import 'auth_page.dart';
+import 'update_checker.dart';
 
 // Navigation bar widget
 class AppNavigationBar extends StatelessWidget {
@@ -99,6 +100,21 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
   void initState() {
     super.initState();
     _checkAuthentication();
+    
+    // Start update checker for web only
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        UpdateChecker.startChecking(context);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (kIsWeb) {
+      UpdateChecker.stopChecking();
+    }
+    super.dispose();
   }
 
   Future<void> _checkAuthentication() async {

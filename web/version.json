@@ -1,5 +1,5 @@
 {
-  "version": "2.4.0",
-  "updateMessage": "Bug fixes and improvements! Please update.",
-  "releaseDate": "2026-02-01"
+  "version": "2.5.0",
+  "updateMessage": "New guest user system with auto-account creation and checkout conversion!",
+  "releaseDate": "2026-02-18"
 }
