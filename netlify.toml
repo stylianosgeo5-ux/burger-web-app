@@ -1,13 +1,9 @@
 [build]
-  # Command to build the Flutter web app
-  command = "flutter build web --release"
+  # No build command - we'll deploy pre-built files
+  command = "echo 'Using pre-built files from build/web'"
   
   # Directory to publish (Flutter web output)
   publish = "build/web"
-
-[build.environment]
-  # Flutter channel
-  FLUTTER_VERSION = "stable"
 
 # Redirect rules (SPA support)
 [[redirects]]
