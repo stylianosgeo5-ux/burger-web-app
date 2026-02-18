@@ -64,7 +64,7 @@ function initializeDataFile(filePath, defaultSourcePath) {
 
 // Middleware
 app.use(cors({
-  origin: true,
+  origin: ['http://localhost:3000', 'https://burgercy.com', 'https://www.burgercy.com'],
   credentials: true
 }));
 app.use(cookieParser());
@@ -179,15 +179,15 @@ function getOrCreateGuestUser(req, res) {
     
     res.cookie('guestUserId', userId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 30 * 24 * 60 * 60 * 1000
     });
     
     res.cookie('authToken', user.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 30 * 24 * 60 * 60 * 1000
     });
   }
@@ -340,8 +340,8 @@ app.post('/api/auth/login', (req, res) => {
 // GET current user (auto-creates guest if needed)
 app.get('/api/auth/me', guestOrAuthMiddleware, (req, res) => {
   try {
-    const { password, token, ...userWithoutSensitiveData } = req.user;
-    res.json({ user: userWithoutSensitiveData });
+    const { password, ...userWithToken } = req.user;
+    res.json({ user: userWithToken });
   } catch (error) {
     console.error('Error getting current user:', error);
     res.status(500).json({ error: 'Failed to get user data' });
