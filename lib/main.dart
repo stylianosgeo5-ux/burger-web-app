@@ -94,6 +94,7 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
   String? _authToken;
   String? _userId;
   bool _isAuthenticated = false;
+  bool _isGuest = true;
   bool _isCheckingAuth = true;
 
   @override
@@ -105,10 +106,62 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
   Future<void> _checkAuthentication() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
+    
+    // Always call /api/auth/me to get or create guest user
+    try {
+      final response = await http.get(
+        Uri.parse('${OrdersHistory.serverUrl}/api/auth/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final user = data['user'];
+        
+        // Save user data (guest or authenticated)
+        await prefs.setString('user_id', user['id']);
+        if (user['token'] != null) {
+          await prefs.setString('auth_token', user['token']);
+        }
+        if (user['name'] != null) {
+          await prefs.setString('user_name', user['name']);
+        }
+        if (user['email'] != null) {
+          await prefs.setString('user_email', user['email']);
+        }
+        if (user['phone'] != null) {
+          await prefs.setString('user_phone', user['phone']);
+        }
+        
+        setState(() {
+          _authToken = user['token'] ?? token;
+          _userId = user['id'];
+          _userName = user['name'] ?? '';
+          _userEmail = user['email'] ?? '';
+          _userPhone = user['phone'] ?? '';
+          _isGuest = user['isGuest'] ?? true;
+          _isAuthenticated = user['isGuest'] == false;
+          _isCheckingAuth = false;
+        });
+        
+        await _loadOrdersFromServer();
+        return;
+      }
+    } catch (e) {
+      print('Error initializing user: $e');
+    }
+    
+    // Fallback to local storage OR treat as guest
     final userId = prefs.getString('user_id');
     final userName = prefs.getString('user_name');
     final userEmail = prefs.getString('user_email');
     final userPhone = prefs.getString('user_phone');
+    
+    // If we have valid auth token and user data, use it
+    final bool hasValidAuth = token != null && userName != null && userName.isNotEmpty;
     
     setState(() {
       _authToken = token;
@@ -116,7 +169,8 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       _userName = userName ?? '';
       _userEmail = userEmail ?? '';
       _userPhone = userPhone ?? '';
-      _isAuthenticated = token != null;
+      _isGuest = !hasValidAuth; // If no valid auth, treat as guest
+      _isAuthenticated = hasValidAuth;
       _isCheckingAuth = false;
     });
     
@@ -191,8 +245,55 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       _userEmail = '';
       _userPhone = '';
       _isAuthenticated = false;
+      _isGuest = true;
       _allOrders = [];
     });
+    
+    // Re-initialize as new guest
+    await _checkAuthentication();
+  }
+
+  Future<void> _handleGuestConversion(String name, String phone) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${OrdersHistory.serverUrl}/api/cart/checkout'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+        },
+        body: json.encode({
+          'name': name,
+          'phone': phone,
+        }),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final user = data['user'];
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', user['name']);
+        await prefs.setString('user_phone', user['phone']);
+        
+        setState(() {
+          _userName = user['name'];
+          _userPhone = user['phone'];
+          _isGuest = false;
+          _isAuthenticated = true;
+        });
+        
+        return;
+      } else if (response.statusCode == 429) {
+        throw Exception('Too many attempts. Please try again later.');
+      } else if (response.statusCode == 409) {
+        throw Exception('This phone number is already registered.');
+      } else {
+        final data = json.decode(response.body);
+        throw Exception(data['error'] ?? 'Checkout failed');
+      }
+    } catch (e) {
+      throw Exception('Failed to update account: $e');
+    }
   }
 
   void _onNavTap(int idx) {
@@ -227,13 +328,6 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
       );
     }
     
-    // Show auth page if not authenticated
-    if (!_isAuthenticated) {
-      return AuthPage(
-        onAuthSuccess: _handleAuthSuccess,
-      );
-    }
-    
     Widget page;
     if (_selectedIndex == 0) {
       page = HomePage(
@@ -253,6 +347,8 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
         userPhone: _userPhone,
         authToken: _authToken,
         userId: _userId,
+        isGuest: _isGuest,
+        onGuestConvert: _handleGuestConversion,
       );
     } else if (_selectedIndex == 2) {
       page = MultiOrderStatusPage(orders: _allOrders);
@@ -761,6 +857,8 @@ class BurgerOrderPage extends StatefulWidget {
   final String userPhone;
   final String? authToken;
   final String? userId;
+  final bool isGuest;
+  final Function(String name, String phone)? onGuestConvert;
   
   const BurgerOrderPage({
     super.key,
@@ -770,6 +868,8 @@ class BurgerOrderPage extends StatefulWidget {
     required this.userPhone,
     this.authToken,
     this.userId,
+    this.isGuest = true,
+    this.onGuestConvert,
   });
 
   @override
@@ -843,6 +943,8 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
           userPhone: widget.userPhone,
           userId: widget.userId,
           authToken: widget.authToken,
+          isGuest: widget.isGuest,
+          onGuestConvert: widget.onGuestConvert,
           onOrderPlaced: (order) {
             setState(() {
               _cart.reset();
@@ -1603,6 +1705,8 @@ class CartPage extends StatefulWidget {
   final String userPhone;
   final String? userId;
   final String? authToken;
+  final bool isGuest;
+  final Function(String name, String phone)? onGuestConvert;
   final void Function(Map<String, dynamic>)? onOrderPlaced;
 
   const CartPage({
@@ -1627,6 +1731,8 @@ class CartPage extends StatefulWidget {
     required this.onOrderPlaced,
     this.userId,
     this.authToken,
+    this.isGuest = true,
+    this.onGuestConvert,
   });
 
   @override
@@ -1642,6 +1748,11 @@ class _CartPageState extends State<CartPage> {
   String _discountMessage = '';
   double _discountAmount = 0.0;
   bool _discountApplied = false;
+  
+  // Guest user conversion form
+  final TextEditingController _guestNameController = TextEditingController();
+  final TextEditingController _guestPhoneController = TextEditingController();
+  String _guestConversionError = '';
   
   // Loading state to prevent duplicate orders
   bool _isPlacingOrder = false;
@@ -1674,6 +1785,8 @@ class _CartPageState extends State<CartPage> {
   @override
   void dispose() {
     _discountCodeController.dispose();
+    _guestNameController.dispose();
+    _guestPhoneController.dispose();
     super.dispose();
   }
   
@@ -1762,7 +1875,47 @@ class _CartPageState extends State<CartPage> {
     
     setState(() {
       _isPlacingOrder = true;
+      _guestConversionError = '';
     });
+    
+    // If user is a guest, convert them to a permanent user first
+    if (widget.isGuest && widget.onGuestConvert != null) {
+      final name = _guestNameController.text.trim();
+      final phone = _guestPhoneController.text.trim();
+      
+      if (name.isEmpty || phone.isEmpty) {
+        setState(() {
+          _isPlacingOrder = false;
+          _guestConversionError = 'Please enter your name and phone number';
+        });
+        return;
+      }
+      
+      if (phone.length < 10 || phone.length > 15 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+        setState(() {
+          _isPlacingOrder = false;
+          _guestConversionError = 'Phone must be 10-15 digits';
+        });
+        return;
+      }
+      
+      try {
+        await widget.onGuestConvert!(name, phone);
+        // Conversion successful, continue with order
+      } catch (e) {
+        setState(() {
+          _isPlacingOrder = false;
+          if (e.toString().contains('429')) {
+            _guestConversionError = 'Too many attempts. Please try again in 15 minutes.';
+          } else if (e.toString().contains('409')) {
+            _guestConversionError = 'Phone number already registered. Please login instead.';
+          } else {
+            _guestConversionError = 'Failed to complete signup: ${e.toString()}';
+          }
+        });
+        return;
+      }
+    }
     
     // Check if store is open before placing order
     try {
@@ -2270,6 +2423,86 @@ class _CartPageState extends State<CartPage> {
                   ],
                 ),
                 const SizedBox(height: 16),
+                
+                // Guest User Checkout Form
+                if (widget.isGuest) ...[
+                  const Divider(thickness: 2),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Complete Your Order',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Please provide your details to place your order:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _guestNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      hintText: 'Enter your name',
+                      prefixIcon: const Icon(Icons.person),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.orange[50],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _guestPhoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Phone Number',
+                      hintText: 'Enter your phone number',
+                      prefixIcon: const Icon(Icons.phone),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.orange[50],
+                    ),
+                  ),
+                  if (_guestConversionError.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red, width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _guestConversionError,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  const Divider(thickness: 2),
+                  const SizedBox(height: 16),
+                ],
+                
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
