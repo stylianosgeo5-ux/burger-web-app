@@ -16,24 +16,44 @@ const HISTORY_FILE = path.join(DATA_DIR, 'fulfilled_orders_history.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const OPENING_HOURS_FILE = path.join(DATA_DIR, 'opening_hours.json');
 
+// Log data directory information
+console.log('=== DATA DIRECTORY INFO ===');
+console.log('PERSISTENT_STORAGE_DIR env:', process.env.PERSISTENT_STORAGE_DIR);
+console.log('Using DATA_DIR:', DATA_DIR);
+console.log('Current directory:', __dirname);
+
 // Ensure data directory exists (for persistent storage)
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   console.log(`Created data directory: ${DATA_DIR}`);
+} else {
+  console.log(`Data directory exists: ${DATA_DIR}`);
+  // List existing files in data directory
+  try {
+    const files = fs.readdirSync(DATA_DIR);
+    console.log('Files in data directory:', files);
+  } catch (e) {
+    console.error('Error reading data directory:', e.message);
+  }
 }
 
 // Helper function to initialize data files from repository defaults
 function initializeDataFile(filePath, defaultSourcePath) {
+  const fileName = path.basename(filePath);
+  
   if (!fs.existsSync(filePath)) {
+    console.log(`${fileName} does NOT exist at ${filePath} - initializing...`);
     // Check if we have a source file in the repository to copy from
     if (fs.existsSync(defaultSourcePath)) {
       fs.copyFileSync(defaultSourcePath, filePath);
-      console.log(`Initialized ${path.basename(filePath)} from repository defaults`);
+      console.log(`✓ Initialized ${fileName} from repository defaults`);
     } else {
       // Fallback: create empty array if no default exists
       fs.writeFileSync(filePath, '[]');
-      console.log(`Created empty ${path.basename(filePath)}`);
+      console.log(`✓ Created empty ${fileName}`);
     }
+  } else {
+    console.log(`✓ ${fileName} already exists at ${filePath} - preserving existing data`);
   }
 }
 
@@ -43,11 +63,13 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // Initialize all data files with repository defaults if they don't exist
+console.log('\n=== INITIALIZING DATA FILES ===');
 initializeDataFile(ORDERS_FILE, path.join(__dirname, 'burger_orders.json'));
 initializeDataFile(DISCOUNTS_FILE, path.join(__dirname, 'discount_codes.json'));
 initializeDataFile(HISTORY_FILE, path.join(__dirname, 'fulfilled_orders_history.json'));
 initializeDataFile(USERS_FILE, path.join(__dirname, 'users.json'));
 initializeDataFile(OPENING_HOURS_FILE, path.join(__dirname, 'opening_hours.json'));
+console.log('=== INITIALIZATION COMPLETE ===\n');
 
 // Helper function to hash passwords
 function hashPassword(password) {
