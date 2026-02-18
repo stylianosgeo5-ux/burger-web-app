@@ -99,8 +99,10 @@ function generateUUID() {
 
 // Helper function to validate phone number
 function validatePhoneNumber(phone) {
-  const cleaned = phone.replace(/\D/g, '');
-  return cleaned.length >= 10 && cleaned.length <= 15;
+  // Cyprus phone validation: 8 digits or +357 followed by 8 digits
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const cyprusPattern = /^(\+?357)?[0-9]{8}$/;
+  return cyprusPattern.test(cleaned);
 }
 
 // Helper function to sanitize input

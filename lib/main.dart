@@ -1891,10 +1891,14 @@ class _CartPageState extends State<CartPage> {
         return;
       }
       
-      if (phone.length < 10 || phone.length > 15 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+      // Cyprus phone validation: 8 digits or +357 followed by 8 digits
+      final cleanedPhone = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+      final cyprusPhonePattern = RegExp(r'^(\+?357)?[0-9]{8}$');
+      
+      if (!cyprusPhonePattern.hasMatch(cleanedPhone)) {
         setState(() {
           _isPlacingOrder = false;
-          _guestConversionError = 'Phone must be 10-15 digits';
+          _guestConversionError = 'Please enter a valid Cyprus phone number (8 digits)';
         });
         return;
       }
@@ -2463,7 +2467,8 @@ class _CartPageState extends State<CartPage> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: 'Phone Number',
-                      hintText: 'Enter your phone number',
+                      hintText: '99123456 or +35799123456',
+                      prefixText: '+357 ',
                       prefixIcon: const Icon(Icons.phone),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
