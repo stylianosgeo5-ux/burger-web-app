@@ -1,5 +1,5 @@
 {
-  "version": "2.9.0",
-  "updateMessage": "Classic burger now €9.90 with caramelized onion!",
+  "version": "3.0.0",
+  "updateMessage": "Custom burger ingredients now visible in order status!",
   "releaseDate": "2026-02-18"
 }

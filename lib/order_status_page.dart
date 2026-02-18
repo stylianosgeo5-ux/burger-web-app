@@ -654,14 +654,45 @@ class _OrderStatusPageState extends State<OrderStatusPage> with SingleTickerProv
 
   Widget _buildBurgerItem(int number, Map<String, dynamic> burger) {
     final ingredients = burger['ingredients'] as Map<String, dynamic>? ?? {};
-    final activeIngredients = ingredients.entries
-        .where((e) => e.value == true)
-        .map((e) => e.key)
-        .toList();
     
     // Determine if it's a classic or custom burger
     final isClassic = burger['type'] == 'classic';
     final burgerName = isClassic ? 'Classic Burger' : 'Custom Burger';
+    
+    // Extract active ingredients based on burger type
+    List<String> activeIngredients = [];
+    if (isClassic) {
+      // Classic burger: ingredients are stored as {'Mayo': true, 'Lettuce': true}
+      activeIngredients = ingredients.entries
+          .where((e) => e.value == true)
+          .map((e) => e.key)
+          .toList();
+    } else {
+      // Custom burger: ingredients are stored as {'Mayo': {'included': true, 'type': 'checkbox'}, 'Cheese': {'quantity': 2, 'type': 'quantity'}}
+      activeIngredients = ingredients.entries
+          .where((e) {
+            if (e.value is Map<String, dynamic>) {
+              final ingredientData = e.value as Map<String, dynamic>;
+              if (ingredientData['type'] == 'checkbox') {
+                return ingredientData['included'] == true;
+              } else if (ingredientData['type'] == 'quantity') {
+                return (ingredientData['quantity'] ?? 0) > 0;
+              }
+            }
+            return false;
+          })
+          .map((e) {
+            // For quantity items, show the quantity
+            if (e.value is Map<String, dynamic>) {
+              final ingredientData = e.value as Map<String, dynamic>;
+              if (ingredientData['type'] == 'quantity' && (ingredientData['quantity'] ?? 0) > 1) {
+                return '${e.key} (${ingredientData['quantity']})';
+              }
+            }
+            return e.key;
+          })
+          .toList();
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
