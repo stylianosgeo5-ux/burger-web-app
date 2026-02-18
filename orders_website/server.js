@@ -8,6 +8,8 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Test: Persistent disk should preserve data across deploys
+
 // Use persistent disk if available, otherwise use current directory
 const DATA_DIR = process.env.PERSISTENT_STORAGE_DIR || __dirname;
 const ORDERS_FILE = path.join(DATA_DIR, 'burger_orders.json');
