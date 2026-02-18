@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'order_status_page.dart';
 import 'multi_order_status_page.dart';
 import 'auth_page.dart';
+import 'account_page.dart';
 
 // Navigation bar widget
 class AppNavigationBar extends StatelessWidget {
@@ -26,6 +27,7 @@ class AppNavigationBar extends StatelessWidget {
       _NavTab('Home', Icons.home),
       _NavTab('Order', Icons.fastfood),
       _NavTab('Status', Icons.assignment_turned_in),
+      _NavTab('Account', Icons.person),
     ];
     return Container(
       color: Colors.orange[50],
@@ -252,8 +254,24 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
         authToken: _authToken,
         userId: _userId,
       );
-    } else {
+    } else if (_selectedIndex == 2) {
       page = MultiOrderStatusPage(orders: _allOrders);
+    } else {
+      page = AccountPage(
+        userName: _userName,
+        userEmail: _userEmail,
+        userPhone: _userPhone,
+        authToken: _authToken,
+        userId: _userId,
+        onInfoUpdated: (name, email, phone) {
+          setState(() {
+            _userName = name;
+            _userEmail = email;
+            _userPhone = phone;
+          });
+        },
+        onLogout: _handleLogout,
+      );
     }
     return Scaffold(
       appBar: null,
