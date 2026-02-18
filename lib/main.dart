@@ -2002,6 +2002,15 @@ class _CartPageState extends State<CartPage> {
 
   void _completeOrder() {
     final finalPrice = _calculateTotalPrice() - _discountAmount;
+    
+    // For guest users, use the form values directly
+    final orderUserName = widget.isGuest && _guestNameController.text.isNotEmpty 
+        ? _guestNameController.text.trim()
+        : widget.userName;
+    final orderUserPhone = widget.isGuest && _guestPhoneController.text.isNotEmpty
+        ? _guestPhoneController.text.trim()
+        : widget.userPhone;
+    
     final order = {
       'timestamp': DateTime.now().toString(),
       'burgerOrders': List.from(widget.burgerOrders),
@@ -2019,9 +2028,9 @@ class _CartPageState extends State<CartPage> {
       'discountAmount': _discountAmount,
       'discountCode': _discountApplied ? _discountCodeController.text.trim().toUpperCase() : null,
       'paymentMethod': _selectedPaymentMethod,
-      'userName': widget.userName,
+      'userName': orderUserName,
       'userEmail': widget.userEmail,
-      'userPhone': widget.userPhone,
+      'userPhone': orderUserPhone,
       'userId': widget.userId,
     };
     OrdersHistory().addOrder(order, authToken: widget.authToken);

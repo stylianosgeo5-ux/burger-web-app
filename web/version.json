@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
-  "updateMessage": "Account data now automatically deleted on logout!",
+  "version": "2.8.0",
+  "updateMessage": "Fixed: Name and phone now properly displayed in order dashboard!",
   "releaseDate": "2026-02-18"
 }
