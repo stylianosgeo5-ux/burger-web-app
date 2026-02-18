@@ -898,6 +898,13 @@
                     </div>
                 ` : '';
 
+                // Discount Code
+                const discountHTML = order.discountCode ? `
+                    <div class="discount-info" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: bold; box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);">
+                        <span style="font-size: 1.2em;">🎟️</span> <strong>Discount Code:</strong> ${order.discountCode}
+                    </div>
+                ` : '';
+
                 const fulfilledClass = order.fulfilled ? 'fulfilled' : '';
                 const fulfilledBadge = order.fulfilled ? '<span class="fulfilled-badge">✓ Fulfilled</span>' : '';
                 const cookedBadge = order.cooked && !order.fulfilled ? '<span class="cooked-badge">🍳 Cooked</span>' : '';
@@ -921,6 +928,7 @@
                         ${locationHTML}
                         ${paymentHTML}
                         ${contactHTML}
+                        ${discountHTML}
                         <div class="total-price">
                             <span class="total-label">Total:</span>
                             <span class="total-amount">€${order.totalPrice.toFixed(2)}</span>
