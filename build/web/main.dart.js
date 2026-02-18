@@ -38943,7 +38943,7 @@ q=A.b([new A.cF(0,B.bo,A.ag(r,B.cR.gm()>>>16&255,B.cR.gm()>>>8&255,B.cR.gm()&255
 p=A.bG(A.b([A.bs(f,B.FC,B.m,f,f,new A.bh(A.ag(51,B.i.gm()>>>16&255,B.i.gm()>>>8&255,B.i.gm()&255),f,f,A.br(12),f,f,B.J),f,f,f,B.dF,f,f,f),B.ib,B.EH],e),B.w,B.p,B.n)
 o=A.bG(A.b([B.FD,B.Ol,B.UM],e),B.w,B.p,B.n)
 n=A.br(12)
-m=A.bG(A.b([A.bs(f,B.UG,B.m,f,f,new A.bh(B.cR,f,f,A.br(20),f,f,B.J),f,f,f,B.dE,f,f,f),B.z1,B.Uw],e),B.w,B.p,B.n)
+m=A.bG(A.b([A.bs(f,B.UA,B.m,f,f,new A.bh(B.cR,f,f,A.br(20),f,f,B.J),f,f,f,B.dE,f,f,f),B.z1,B.Uw],e),B.w,B.p,B.n)
 l=g.BO("1","Tag @burgercy.com_ in your story")
 k=g.BO("2","Show your story when ordering")
 j=g.BO("3","Get your discount code!")
@@ -39026,7 +39026,7 @@ n=m==null?n.c:m
 m=t.p
 s=A.b([A.f5(o,o,B.Fx,o,o,new A.ag6(p),o,o,o)],m)
 if(p.gHU()>0)s.push(A.K4(o,A.bs(o,A.ax(""+p.gHU(),o,o,o,B.zv,B.cE,o),B.m,o,B.AH,new A.bh(B.aQ,o,o,o,o,o,B.ds),o,o,o,B.nb,o,o,o),o,o,o,0,0,o))
-n=A.Gm(A.b([new A.b8(B.Eh,A.kK(B.ck,s,B.M,B.cD),o)],m),o,!0,n,o,1,o,o,o,!1,o,!1,o,o,o,o,!0,o,o,o,o,o,B.UD,o,o,o,1,o)
+n=A.Gm(A.b([new A.b8(B.Eh,A.kK(B.ck,s,B.M,B.cD),o)],m),o,!0,n,o,1,o,o,o,!1,o,!1,o,o,o,o,!0,o,o,o,o,o,B.UE,o,o,o,1,o)
 s=A.bs(o,A.a3m(A.b([p.BN("Burgers"),p.BN("Sides"),p.BN("Drinks")],m),B.dF,B.aH),B.m,B.cq,o,o,o,60,o,o,o,o,o)
 r=A.dL(A.a3m(p.a1R(),B.br,B.au))
 q=A.b([new A.cF(0,B.bo,A.ag(B.c.aC(25.5),B.l.gm()>>>16&255,B.l.gm()>>>8&255,B.l.gm()&255),B.kf,4)],t.F)
@@ -39388,7 +39388,7 @@ else n.push(A.f5(B.aQ,k,B.Ft,k,k,l.gabP(),k,k,k))
 n=A.b([B.Mq,B.bj,A.bG(n,B.w,B.p,B.n)],i)
 m=l.f
 if(m.length!==0)B.b.R(n,A.b([B.bI,A.ax(m,k,k,k,A.bO(k,k,l.w?B.aK:B.aQ,k,k,k,k,k,k,k,k,14,k,k,B.R,k,k,!0,k,k,k,k,k,k,k,k),k,k)],i))
-s=A.b([s,B.bI,B.UF,B.aj,B.mX,B.aj,r,B.bj,q,B.bj,B.UA,B.aj,B.mX,B.bI,B.Uk,B.aj,A.bs(k,A.bB(n,B.a4,B.p,B.n),B.m,k,k,new A.bh(B.iZ,k,o,p,k,k,B.J),k,k,k,B.br,k,k,k),B.aj],i)
+s=A.b([s,B.bI,B.UG,B.aj,B.mX,B.aj,r,B.bj,q,B.bj,B.UB,B.aj,B.mX,B.bI,B.Uk,B.aj,A.bs(k,A.bB(n,B.a4,B.p,B.n),B.m,k,k,new A.bh(B.iZ,k,o,p,k,k,B.J),k,k,k,B.br,k,k,k),B.aj],i)
 if(l.a.c.length!==0){r=A.b([B.Ux,B.bI],i)
 q=l.a.c
 B.b.R(r,new A.kh(q,A.W(q).i("kh<1>")).gdm().ei(0,new A.ah4(l),t.y_).dP(0))
@@ -39567,7 +39567,7 @@ s===$&&A.a()
 s.am(0,new A.af5(r))
 return r.a},
 H(a){var s,r,q,p,o,n,m=this,l=null,k=m.n_(),j=A.Q(a).ax,i=j.y2
-j=A.Gm(l,l,!0,i==null?j.c:i,l,1,l,l,l,!1,l,!1,l,l,l,l,!0,l,l,l,l,l,B.UE,l,l,l,1,l)
+j=A.Gm(l,l,!0,i==null?j.c:i,l,1,l,l,l,!1,l,!1,l,l,l,l,!0,l,l,l,l,l,B.UF,l,l,l,1,l)
 i=A.bs(l,B.Uy,B.m,B.cq,l,l,l,l,l,B.js,l,l,1/0)
 s=t.p
 r=A.b([B.Ub,B.bj],s)
@@ -40077,7 +40077,7 @@ return A.bs(s,A.ax(a,s,s,s,A.bO(s,s,B.mD,s,s,s,s,s,s,s,s,12,s,s,B.R,s,s,!0,s,s,s
 $S:325}
 A.alk.prototype={
 $1(a){var s=null
-return A.ar_(A.b([A.Mj(B.Uq,new A.ali(a),s),A.jT(!1,B.UB,s,s,B.b8,s,s,s,s,new A.alj(a),s,A.iL(s,s,B.aQ,s,s,s,s,s,s,B.i,s,s,s,s,s,s,s,s,s))],t.p),B.UJ,B.UC)},
+return A.ar_(A.b([A.Mj(B.Uq,new A.ali(a),s),A.jT(!1,B.UC,s,s,B.b8,s,s,s,s,new A.alj(a),s,A.iL(s,s,B.aQ,s,s,s,s,s,s,B.i,s,s,s,s,s,s,s,s,s))],t.p),B.UJ,B.UD)},
 $S:93}
 A.ali.prototype={
 $0(){A.eu(this.a,!1).ms(!1)
@@ -90083,15 +90083,15 @@ B.Ux=new A.aX("\ud83c\udf54 Burgers",null,B.RL,null,null,null,null,null,null)
 B.RM=new A.i(!0,B.A,null,null,null,null,24,B.T,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
 B.Uy=new A.aX("Build Your Burger",null,B.RM,B.cE,null,null,null,null,null)
 B.Uz=new A.aX("Custom Burger",null,B.aU,null,null,null,null,null,null)
-B.zy=new A.i(!0,B.f4,null,null,null,null,14,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-B.UA=new A.aX("\u0397 \u03c4\u03bf\u03c0\u03bf\u03b8\u03b5\u03c3\u03af\u03b1 \u03c0\u03b1\u03c1\u03b1\u03bb\u03b1\u03b2\u03ae\u03c2 \u03c4\u03c9\u03bd \u03c0\u03b1\u03c1\u03b1\u03b3\u03b3\u03b5\u03bb\u03b9\u03ce\u03bd \u03b8\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03b1\u03c0\u03bf\u03ba\u03bb\u03b5\u03b9\u03c3\u03c4\u03b9\u03ba\u03ac \u03bc\u03c0\u03c1\u03bf\u03c3\u03c4\u03ac \u03b1\u03c0\u03cc \u03c4\u03b9\u03c2 \u0395\u03c3\u03c4\u03af\u03b5\u03c2 apolonia",null,B.zy,B.cE,null,null,null,null,null)
-B.UB=new A.aX("Yes, Cancel",null,null,null,null,null,null,null,null)
-B.UC=new A.aX("Cancel Order?",null,null,null,null,null,null,null,null)
-B.UD=new A.aX("\ud83c\udf54 burgercy.com",null,null,null,null,null,null,null,null)
-B.UE=new A.aX("\ud83c\udf54 Customize Your Burger",null,null,null,null,null,null,null,null)
-B.UF=new A.aX("\u0397 \u03c0\u03b1\u03c1\u03b1\u03b3\u03b3\u03b5\u03bb\u03af\u03b1 \u03b8\u03b1 \u03c0\u03bb\u03b7\u03c1\u03ce\u03bd\u03b5\u03c4\u03b1\u03b9 \u03c3\u03c4\u03bf \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03c0\u03b1\u03c1\u03ac\u03b4\u03bf\u03c3\u03b7\u03c2 \u03bc\u03b5 \u03bc\u03b5\u03c4\u03c1\u03b7\u03c4\u03ac \u03ae \u03bc\u03ad\u03c3\u03c9 Revolut.",null,B.zy,null,null,null,null,null,null)
 B.R4=new A.i(!0,B.i,null,null,null,null,16,B.T,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-B.UG=new A.aX("50-100% OFF",null,B.R4,null,null,null,null,null,null)
+B.UA=new A.aX("50/100",null,B.R4,null,null,null,null,null,null)
+B.zy=new A.i(!0,B.f4,null,null,null,null,14,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
+B.UB=new A.aX("\u0397 \u03c4\u03bf\u03c0\u03bf\u03b8\u03b5\u03c3\u03af\u03b1 \u03c0\u03b1\u03c1\u03b1\u03bb\u03b1\u03b2\u03ae\u03c2 \u03c4\u03c9\u03bd \u03c0\u03b1\u03c1\u03b1\u03b3\u03b3\u03b5\u03bb\u03b9\u03ce\u03bd \u03b8\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03b1\u03c0\u03bf\u03ba\u03bb\u03b5\u03b9\u03c3\u03c4\u03b9\u03ba\u03ac \u03bc\u03c0\u03c1\u03bf\u03c3\u03c4\u03ac \u03b1\u03c0\u03cc \u03c4\u03b9\u03c2 \u0395\u03c3\u03c4\u03af\u03b5\u03c2 apolonia",null,B.zy,B.cE,null,null,null,null,null)
+B.UC=new A.aX("Yes, Cancel",null,null,null,null,null,null,null,null)
+B.UD=new A.aX("Cancel Order?",null,null,null,null,null,null,null,null)
+B.UE=new A.aX("\ud83c\udf54 burgercy.com",null,null,null,null,null,null,null,null)
+B.UF=new A.aX("\ud83c\udf54 Customize Your Burger",null,null,null,null,null,null,null,null)
+B.UG=new A.aX("\u0397 \u03c0\u03b1\u03c1\u03b1\u03b3\u03b3\u03b5\u03bb\u03af\u03b1 \u03b8\u03b1 \u03c0\u03bb\u03b7\u03c1\u03ce\u03bd\u03b5\u03c4\u03b1\u03b9 \u03c3\u03c4\u03bf \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03c0\u03b1\u03c1\u03ac\u03b4\u03bf\u03c3\u03b7\u03c2 \u03bc\u03b5 \u03bc\u03b5\u03c4\u03c1\u03b7\u03c4\u03ac \u03ae \u03bc\u03ad\u03c3\u03c9 Revolut.",null,B.zy,null,null,null,null,null,null)
 B.UH=new A.aX("\ud83d\uded2 Your Cart",null,null,null,null,null,null,null,null)
 B.UI=new A.aX("Customize Burger",null,null,null,null,null,null,null,null)
 B.UJ=new A.aX("Are you sure you want to cancel this order?",null,null,null,null,null,null,null,null)

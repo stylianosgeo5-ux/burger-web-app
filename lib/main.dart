@@ -665,7 +665,7 @@ class _HomePageState extends State<HomePage> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: const Text(
-                                    '50-100% OFF',
+                                    '50/100',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
