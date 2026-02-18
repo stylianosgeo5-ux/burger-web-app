@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
@@ -17,6 +18,8 @@ const DISCOUNTS_FILE = path.join(DATA_DIR, 'discount_codes.json');
 const HISTORY_FILE = path.join(DATA_DIR, 'fulfilled_orders_history.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const OPENING_HOURS_FILE = path.join(DATA_DIR, 'opening_hours.json');
+const CARTS_FILE = path.join(DATA_DIR, 'carts.json');
+const RATE_LIMITS_FILE = path.join(DATA_DIR, 'rate_limits.json');
 
 // Log data directory information
 console.log('=== DATA DIRECTORY INFO ===');
@@ -60,7 +63,11 @@ function initializeDataFile(filePath, defaultSourcePath) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.static(__dirname));
 
@@ -71,6 +78,8 @@ initializeDataFile(DISCOUNTS_FILE, path.join(__dirname, 'discount_codes.json'));
 initializeDataFile(HISTORY_FILE, path.join(__dirname, 'fulfilled_orders_history.json'));
 initializeDataFile(USERS_FILE, path.join(__dirname, 'users.json'));
 initializeDataFile(OPENING_HOURS_FILE, path.join(__dirname, 'opening_hours.json'));
+initializeDataFile(CARTS_FILE, path.join(__dirname, 'carts.json'));
+initializeDataFile(RATE_LIMITS_FILE, path.join(__dirname, 'rate_limits.json'));
 console.log('=== INITIALIZATION COMPLETE ===\n');
 
 // Helper function to hash passwords
@@ -83,9 +92,116 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+// Helper function to generate UUID
+function generateUUID() {
+  return crypto.randomUUID();
+}
+
+// Helper function to validate phone number
+function validatePhoneNumber(phone) {
+  const cleaned = phone.replace(/\D/g, '');
+  return cleaned.length >= 10 && cleaned.length <= 15;
+}
+
+// Helper function to sanitize input
+function sanitizeInput(input) {
+  if (typeof input !== 'string') return input;
+  return input.trim().replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '');
+}
+
+// Rate limiting helper
+function checkRateLimit(identifier, endpoint, maxAttempts = 5, windowMinutes = 15) {
+  try {
+    const rateLimits = JSON.parse(fs.readFileSync(RATE_LIMITS_FILE, 'utf8'));
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - windowMinutes * 60000);
+    
+    const cleanedLimits = rateLimits.filter(rl => 
+      new Date(rl.windowStart) > windowStart
+    );
+    
+    const existing = cleanedLimits.find(rl => 
+      rl.identifier === identifier && rl.endpoint === endpoint
+    );
+    
+    if (!existing) {
+      cleanedLimits.push({
+        id: generateUUID(),
+        identifier,
+        endpoint,
+        attempts: 1,
+        windowStart: now.toISOString()
+      });
+      fs.writeFileSync(RATE_LIMITS_FILE, JSON.stringify(cleanedLimits, null, 2));
+      return { allowed: true, remaining: maxAttempts - 1 };
+    }
+    
+    if (existing.attempts >= maxAttempts) {
+      return { 
+        allowed: false, 
+        remaining: 0,
+        retryAfter: Math.ceil((windowMinutes * 60000 - (now - new Date(existing.windowStart))) / 1000)
+      };
+    }
+    
+    existing.attempts++;
+    fs.writeFileSync(RATE_LIMITS_FILE, JSON.stringify(cleanedLimits, null, 2));
+    return { allowed: true, remaining: maxAttempts - existing.attempts };
+  } catch (error) {
+    console.error('Rate limit check error:', error);
+    return { allowed: true, remaining: maxAttempts };
+  }
+}
+
+// Helper to get or create guest user
+function getOrCreateGuestUser(req, res) {
+  let userId = req.cookies?.guestUserId;
+  const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+  
+  let user = null;
+  if (userId) {
+    user = users.find(u => u.id === userId);
+  }
+  
+  if (!user) {
+    userId = generateUUID();
+    user = {
+      id: userId,
+      isGuest: true,
+      token: generateToken(),
+      createdAt: new Date().toISOString(),
+      phone: null,
+      name: null,
+      email: null
+    };
+    users.push(user);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    
+    res.cookie('guestUserId', userId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000
+    });
+    
+    res.cookie('authToken', user.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000
+    });
+  }
+  
+  return user;
+}
+
 // Middleware to verify authentication token
 function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']?.replace('Bearer ', '');
+  let token = req.headers['authorization']?.replace('Bearer ', '');
+  
+  if (!token) {
+    token = req.cookies?.authToken;
+  }
   
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -104,6 +220,34 @@ function authenticateToken(req, res, next) {
   } catch (error) {
     console.error('Error verifying token:', error);
     res.status(500).json({ error: 'Authentication failed' });
+  }
+}
+
+// Middleware for guest detection (auto-create guest user if no auth)
+function guestOrAuthMiddleware(req, res, next) {
+  let token = req.headers['authorization']?.replace('Bearer ', '');
+  
+  if (!token) {
+    token = req.cookies?.authToken;
+  }
+  
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    
+    if (token) {
+      const user = users.find(u => u.token === token);
+      if (user) {
+        req.user = user;
+        return next();
+      }
+    }
+    
+    req.user = getOrCreateGuestUser(req, res);
+    next();
+  } catch (error) {
+    console.error('Error in guest middleware:', error);
+    req.user = getOrCreateGuestUser(req, res);
+    next();
   }
 }
 
@@ -191,6 +335,180 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
+// ==================== CART ENDPOINTS ====================
+
+// GET current user (auto-creates guest if needed)
+app.get('/api/auth/me', guestOrAuthMiddleware, (req, res) => {
+  try {
+    const { password, token, ...userWithoutSensitiveData } = req.user;
+    res.json({ user: userWithoutSensitiveData });
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    res.status(500).json({ error: 'Failed to get user data' });
+  }
+});
+
+// GET cart for current user
+app.get('/api/cart', guestOrAuthMiddleware, (req, res) => {
+  try {
+    const carts = JSON.parse(fs.readFileSync(CARTS_FILE, 'utf8'));
+    let cart = carts.find(c => c.userId === req.user.id);
+    
+    if (!cart) {
+      cart = {
+        id: generateUUID(),
+        userId: req.user.id,
+        items: [],
+        discountCode: null,
+        discountAmount: 0,
+        subtotal: 0,
+        total: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      };
+      carts.push(cart);
+      fs.writeFileSync(CARTS_FILE, JSON.stringify(carts, null, 2));
+    }
+    
+    res.json(cart);
+  } catch (error) {
+    console.error('Error getting cart:', error);
+    res.status(500).json({ error: 'Failed to get cart' });
+  }
+});
+
+// PUT update cart
+app.put('/api/cart', guestOrAuthMiddleware, (req, res) => {
+  try {
+    const { items, discountCode } = req.body;
+    
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: 'Items must be an array' });
+    }
+    
+    const carts = JSON.parse(fs.readFileSync(CARTS_FILE, 'utf8'));
+    let cartIndex = carts.findIndex(c => c.userId === req.user.id);
+    
+    if (cartIndex === -1) {
+      const newCart = {
+        id: generateUUID(),
+        userId: req.user.id,
+        items: items,
+        discountCode: discountCode || null,
+        discountAmount: 0,
+        subtotal: 0,
+        total: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      };
+      carts.push(newCart);
+      cartIndex = carts.length - 1;
+    } else {
+      carts[cartIndex].items = items;
+      carts[cartIndex].updatedAt = new Date().toISOString();
+      if (discountCode !== undefined) {
+        carts[cartIndex].discountCode = discountCode;
+      }
+    }
+    
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    carts[cartIndex].subtotal = subtotal;
+    
+    let discountAmount = 0;
+    if (carts[cartIndex].discountCode) {
+      const discounts = JSON.parse(fs.readFileSync(DISCOUNTS_FILE, 'utf8'));
+      const discount = discounts.find(d => d.code === carts[cartIndex].discountCode && d.active);
+      if (discount) {
+        if (discount.type === 'percentage') {
+          discountAmount = subtotal * (discount.value / 100);
+        } else {
+          discountAmount = discount.value;
+        }
+      }
+    }
+    carts[cartIndex].discountAmount = discountAmount;
+    carts[cartIndex].total = subtotal - discountAmount;
+    
+    fs.writeFileSync(CARTS_FILE, JSON.stringify(carts, null, 2));
+    res.json(carts[cartIndex]);
+  } catch (error) {
+    console.error('Error updating cart:', error);
+    res.status(500).json({ error: 'Failed to update cart' });
+  }
+});
+
+// DELETE cart
+app.delete('/api/cart', guestOrAuthMiddleware, (req, res) => {
+  try {
+    const carts = JSON.parse(fs.readFileSync(CARTS_FILE, 'utf8'));
+    const filtered = carts.filter(c => c.userId !== req.user.id);
+    fs.writeFileSync(CARTS_FILE, JSON.stringify(filtered, null, 2));
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting cart:', error);
+    res.status(500).json({ error: 'Failed to delete cart' });
+  }
+});
+
+// POST checkout - converts guest to permanent user
+app.post('/api/cart/checkout', guestOrAuthMiddleware, (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    
+    const identifier = req.ip || req.connection.remoteAddress;
+    const rateLimit = checkRateLimit(identifier, '/api/cart/checkout', 10, 15);
+    
+    if (!rateLimit.allowed) {
+      return res.status(429).json({ 
+        error: 'Too many checkout attempts. Please try again later.',
+        retryAfter: rateLimit.retryAfter
+      });
+    }
+    
+    if (!name || !phone) {
+      return res.status(400).json({ error: 'Name and phone are required' });
+    }
+    
+    const sanitizedName = sanitizeInput(name);
+    const sanitizedPhone = sanitizeInput(phone);
+    
+    if (!validatePhoneNumber(sanitizedPhone)) {
+      return res.status(400).json({ error: 'Invalid phone number format' });
+    }
+    
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const existingUser = users.find(u => u.phone === sanitizedPhone && u.id !== req.user.id);
+    
+    if (existingUser) {
+      return res.status(409).json({ error: 'An account with this phone number already exists' });
+    }
+    
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+    if (userIndex !== -1) {
+      users[userIndex].name = sanitizedName;
+      users[userIndex].phone = sanitizedPhone;
+      users[userIndex].isGuest = false;
+      users[userIndex].updatedAt = new Date().toISOString();
+      
+      fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+      
+      const { password, ...userWithoutPassword } = users[userIndex];
+      res.json({ 
+        success: true, 
+        user: userWithoutPassword,
+        message: 'Account created successfully'
+      });
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error during checkout:', error);
+    res.status(500).json({ error: 'Checkout failed' });
+  }
+});
+
 // GET endpoint to fetch current user's orders
 app.get('/api/user/orders', authenticateToken, (req, res) => {
   try {
@@ -246,9 +564,18 @@ app.get('/api/orders', (req, res) => {
 });
 
 // POST endpoint to add a new order
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', guestOrAuthMiddleware, (req, res) => {
   try {
-    const newOrder = req.body;
+    const orderData = req.body;
+    
+    const rateLimit = checkRateLimit(req.user.id, '/api/orders', 10, 15);
+    
+    if (!rateLimit.allowed) {
+      return res.status(429).json({ 
+        error: 'Too many order attempts. Please try again later.',
+        retryAfter: rateLimit.retryAfter
+      });
+    }
     
     // Check if store is currently open
     const openingHours = JSON.parse(fs.readFileSync(OPENING_HOURS_FILE, 'utf8'));
@@ -294,13 +621,30 @@ app.post('/api/orders', (req, res) => {
       orders = JSON.parse(data);
     }
     
+    const newOrder = {
+      id: generateUUID(),
+      userId: req.user.id,
+      ...orderData,
+      createdAt: new Date().toISOString(),
+      status: orderData.status || 'pending'
+    };
+    
     // Add new order
     orders.push(newOrder);
     
     // Save to file
     fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
     
-    res.json({ success: true, message: 'Order saved successfully' });
+    // Clear user's cart after successful order
+    try {
+      const carts = JSON.parse(fs.readFileSync(CARTS_FILE, 'utf8'));
+      const filtered = carts.filter(c => c.userId !== req.user.id);
+      fs.writeFileSync(CARTS_FILE, JSON.stringify(filtered, null, 2));
+    } catch (e) {
+      console.error('Error clearing cart:', e);
+    }
+    
+    res.json({ success: true, message: 'Order saved successfully', order: newOrder });
   } catch (error) {
     console.error('Error saving order:', error);
     res.status(500).json({ error: 'Failed to save order' });
