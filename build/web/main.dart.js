@@ -7735,7 +7735,7 @@ case 6:o=c
 if(o.b===200){l=o
 n=B.ap.c4(0,A.lI(A.lF(l.e)).c4(0,l.w))
 m=A.bA(J.X(n,"version"))
-if(!J.c(m,"2.8.0"))A.aMF(a,m)}q=1
+if(!J.c(m,"2.9.0"))A.aMF(a,m)}q=1
 s=5
 break
 case 3:q=2
@@ -40034,7 +40034,7 @@ l=s.w
 k=s.x
 j=s.y
 i=s.z
-return s.a*14.99+p+s.c*2.8+(r+q+n+m+l+k+j+i)*1.2},
+return s.a*9.9+p+s.c*2.8+(r+q+n+m+l+k+j+i)*1.2},
 gHL(){var s=this.e
 return s.a+s.b+s.c+s.d+s.e+s.f+s.r+s.w+s.x+s.y+s.z},
 VM(){var s,r,q=this
@@ -40053,7 +40053,7 @@ s=this.c
 s.toString
 q=A.a7O(new A.ahU(this,p),null,q)
 A.ed(s,!1).l4(q)},
-a1w(){var s=null,r=A.b(["Mayo","Ketchup","Lettuce","Tomato","Pickle Cucumber","Onion","Bacon","Egg","Beef Patty"],t.s),q=A.ZR(A.bI(8),A.atL("assets/images/burger.jpg.png",new A.ah8(),B.fz,80,80)),p=t.p,o=A.dI(A.bJ(A.b([B.US,B.bG,A.aD("\u20ac"+B.c.a2(14.99,2),s,s,s,A.c2(s,s,B.b9,s,s,s,s,s,s,s,s,16,s,s,B.R,s,s,!0,s,s,s,s,s,s,s,s),s,s)],p),B.a_,B.o,B.m)),n=A.fl(B.ay,s,B.hi,28,s,new A.ah9(this),s,s,s),m=A.bI(8)
+a1w(){var s=null,r=A.b(["Mayo","Ketchup","Lettuce","Tomato","Pickle Cucumber","Caramelized Onion","Bacon","Egg","Beef Patty"],t.s),q=A.ZR(A.bI(8),A.atL("assets/images/burger.jpg.png",new A.ah8(),B.fz,80,80)),p=t.p,o=A.dI(A.bJ(A.b([B.US,B.bG,A.aD("\u20ac"+B.c.a2(9.9,2),s,s,s,A.c2(s,s,B.b9,s,s,s,s,s,s,s,s,16,s,s,B.R,s,s,!0,s,s,s,s,s,s,s,s),s,s)],p),B.a_,B.o,B.m)),n=A.fl(B.ay,s,B.hi,28,s,new A.ah9(this),s,s,s),m=A.bI(8)
 return A.j5(new A.bh(B.c7,A.bJ(A.b([A.bL(A.b([q,B.fh,o,A.bL(A.b([n,A.bB(s,A.aD(""+this.e.a,s,s,s,B.aT,s,s),B.n,s,s,new A.bp(B.bK,s,s,m,s,s,B.J),s,s,s,B.dz,s,s,s),A.fl(B.aL,s,B.hj,28,s,new A.aha(this),s,s,s)],p),B.t,B.o,B.m)],p),B.a_,B.o,B.m),B.b2,B.UP,B.bG,A.aD(B.b.bR(r,", "),s,s,s,B.Ru,s,s)],p),B.a_,B.o,B.m),s),3,s,s)},
 a1y(){var s=null,r=A.ZR(A.bI(8),A.bB(s,A.eo(B.Fj,B.fF,s,40),B.n,B.bK,s,s,s,80,s,s,s,s,80)),q=t.p,p=A.dI(A.bJ(A.b([B.Uz,B.bG,A.aD("From \u20ac"+B.j.a2(4,2),s,s,s,A.c2(s,s,B.b9,s,s,s,s,s,s,s,s,16,s,s,B.R,s,s,!0,s,s,s,s,s,s,s,s),s,s),B.bG,A.aD("Build your own burger",s,s,s,A.c2(s,s,B.an,s,s,s,s,s,s,s,s,12,B.EM,s,s,s,s,!0,s,s,s,s,s,s,s,s),s,s)],q),B.a_,B.o,B.m)),o=A.fl(B.ay,s,B.hi,28,s,new A.ahc(this),s,s,s),n=A.bI(8),m=this.gacR()
 return A.j5(new A.bh(B.c7,A.bJ(A.b([A.bL(A.b([r,B.fh,p,A.bL(A.b([o,A.bB(s,A.aD(""+this.e.b,s,s,s,B.aT,s,s),B.n,s,s,new A.bp(B.bK,s,s,n,s,s,B.J),s,s,s,B.dz,s,s,s),A.fl(B.aL,s,B.hj,28,s,m,s,s,s)],q),B.t,B.o,B.m)],q),B.a_,B.o,B.m),B.b2,A.cy(A.aIC(B.nF,B.UJ,m,A.jc(s,s,B.A,s,s,s,s,s,s,B.i,s,s,B.Ea,s,s,s,s,s,s)),s,1/0)],q),B.a_,B.o,B.m),s),3,s,s)},
@@ -40100,7 +40100,7 @@ $1(a){var s,r=this.a,q=r.e,p=q.c,o=q.d,n=q.e,m=q.f,l=q.r,k=q.w,j=q.x,i=q.y
 q=q.z
 r.gVy()
 s=r.a
-return new A.o4(this.b,p,o,n,m,l,k,j,i,q,14.99,2.8,1.2,s.d,s.e,s.f,s.w,s.r,s.x,s.y,new A.ahX(r),null)},
+return new A.o4(this.b,p,o,n,m,l,k,j,i,q,9.9,2.8,1.2,s.d,s.e,s.f,s.w,s.r,s.x,s.y,new A.ahX(r),null)},
 $S:275}
 A.ahX.prototype={
 $1(a){var s=this.a
@@ -40148,7 +40148,7 @@ $S:0}
 A.ah6.prototype={
 $0(){var s,r=this.a.e;++r.a
 s=t.N
-r.Q.push(A.a6(["ingredients",A.a6(["Mayo",!0,"Ketchup",!0,"Lettuce",!0,"Tomato",!0,"Pickle Cucumber",!0,"Onion",!0,"Bacon",!0,"Egg",!0,"Beef Patty",!0],s,t.y)],s,t.z))},
+r.Q.push(A.a6(["ingredients",A.a6(["Mayo",!0,"Ketchup",!0,"Lettuce",!0,"Tomato",!0,"Pickle Cucumber",!0,"Caramelized Onion",!0,"Bacon",!0,"Egg",!0,"Beef Patty",!0],s,t.y)],s,t.z))},
 $S:0}
 A.ahc.prototype={
 $0(){var s=this.a
@@ -41214,7 +41214,7 @@ A.afp.prototype={
 $1(a){A.BK(this.a)},
 $S:56}
 A.afo.prototype={
-$1(a){var s=null,r=t.p,q=A.bL(A.b([A.eo(B.Fi,B.A,s,30),A.cy(s,s,10),A.aD("Update Available",s,s,s,s,s,s)],r),B.t,B.o,B.m),p=A.bJ(A.b([A.aD("A new version of the app is available!",s,s,s,A.c2(s,s,s,s,s,s,s,s,s,s,s,s,s,s,B.T,s,s,!0,s,s,s,s,s,s,s,s),s,s),A.cy(s,8,s),A.aD("Current: v2.8.0",s,s,s,s,s,s),A.aD("New: v"+this.a,s,s,s,s,s,s),A.cy(s,12,s),A.aD("Please update to get the latest features and improvements.",s,s,s,A.c2(s,s,B.b9,s,s,s,s,s,s,s,s,s,s,s,s,s,s,!0,s,s,s,s,s,s,s,s),s,s)],r),B.a_,B.o,B.bQ),o=A.Ne(A.aD("Later",s,s,s,s,s,s),new A.afm(a),s),n=A.jc(s,s,B.A,s,s,s,s,s,s,B.i,s,s,s,s,s,s,s,s,s)
+$1(a){var s=null,r=t.p,q=A.bL(A.b([A.eo(B.Fi,B.A,s,30),A.cy(s,s,10),A.aD("Update Available",s,s,s,s,s,s)],r),B.t,B.o,B.m),p=A.bJ(A.b([A.aD("A new version of the app is available!",s,s,s,A.c2(s,s,s,s,s,s,s,s,s,s,s,s,s,s,B.T,s,s,!0,s,s,s,s,s,s,s,s),s,s),A.cy(s,8,s),A.aD("Current: v2.9.0",s,s,s,s,s,s),A.aD("New: v"+this.a,s,s,s,s,s,s),A.cy(s,12,s),A.aD("Please update to get the latest features and improvements.",s,s,s,A.c2(s,s,B.b9,s,s,s,s,s,s,s,s,s,s,s,s,s,s,!0,s,s,s,s,s,s,s,s),s,s)],r),B.a_,B.o,B.bQ),o=A.Ne(A.aD("Later",s,s,s,s,s,s),new A.afm(a),s),n=A.jc(s,s,B.A,s,s,s,s,s,s,B.i,s,s,s,s,s,s,s,s,s)
 return A.Yd(A.b([o,A.km(!1,A.aD("Update Now",s,s,s,s,s,s),s,s,B.ba,s,s,s,s,new A.afn(a),s,n)],r),p,q)},
 $S:73}
 A.afm.prototype={

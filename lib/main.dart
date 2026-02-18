@@ -897,7 +897,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
   final CartState _cart = CartState();
 
   // Item prices
-  final double burgerPrice = 14.99;
+  final double burgerPrice = 9.90;
   final double customBurgerBasePrice = 4.0;
   final double friesPrice = 2.80;
   final double drinkPrice = 1.20;  // All drinks same price
@@ -1016,7 +1016,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
       'Lettuce',
       'Tomato',
       'Pickle Cucumber',
-      'Onion',
+      'Caramelized Onion',
       'Bacon',
       'Egg',
       'Beef Patty'
@@ -1124,7 +1124,7 @@ class _BurgerOrderPageState extends State<BurgerOrderPage> {
                               'Lettuce': true,
                               'Tomato': true,
                               'Pickle Cucumber': true,
-                              'Onion': true,
+                              'Caramelized Onion': true,
                               'Bacon': true,
                               'Egg': true,
                               'Beef Patty': true,
