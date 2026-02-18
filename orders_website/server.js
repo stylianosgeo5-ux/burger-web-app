@@ -1202,7 +1202,122 @@ app.put('/api/opening-hours', (req, res) => {
   }
 });
 
+// ===== ADMIN ENDPOINTS =====
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+
+// Admin authentication middleware
+function adminAuth(req, res, next) {
+  const adminPass = req.headers['x-admin-password'];
+  if (adminPass !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Unauthorized - Invalid admin password' });
+  }
+  next();
+}
+
+// GET all users (Admin only)
+app.get('/api/admin/users', adminAuth, (req, res) => {
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    
+    // Return users without passwords
+    const sanitizedUsers = users.map(({ password, token, ...user }) => ({
+      ...user,
+      hasToken: !!token
+    }));
+    
+    res.json({ 
+      total: sanitizedUsers.length,
+      users: sanitizedUsers 
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// DELETE user by ID (Admin only)
+app.delete('/api/admin/users/:id', adminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    
+    const userIndex = users.findIndex(u => u.id === id);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const deletedUser = users[userIndex];
+    users.splice(userIndex, 1);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    
+    // Also delete user's cart if exists
+    try {
+      const carts = JSON.parse(fs.readFileSync(CARTS_FILE, 'utf8'));
+      const filteredCarts = carts.filter(c => c.userId !== id);
+      fs.writeFileSync(CARTS_FILE, JSON.stringify(filteredCarts, null, 2));
+    } catch (e) {
+      console.log('No cart to delete');
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'User deleted successfully',
+      deletedUser: { id: deletedUser.id, name: deletedUser.name, phone: deletedUser.phone }
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// PATCH user (update phone/name) (Admin only)
+app.patch('/api/admin/users/:id', adminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, email } = req.body;
+    
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const userIndex = users.findIndex(u => u.id === id);
+    
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Check if new phone is already used by another user
+    if (phone) {
+      const phoneExists = users.find(u => u.phone === phone && u.id !== id);
+      if (phoneExists) {
+        return res.status(409).json({ error: 'Phone number already in use' });
+      }
+      users[userIndex].phone = sanitizeInput(phone);
+    }
+    
+    if (name) {
+      users[userIndex].name = sanitizeInput(name);
+    }
+    
+    if (email) {
+      users[userIndex].email = sanitizeInput(email);
+    }
+    
+    users[userIndex].updatedAt = new Date().toISOString();
+    
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    
+    const { password, token, ...updatedUser } = users[userIndex];
+    res.json({ 
+      success: true, 
+      message: 'User updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`Dashboard available at http://localhost:${PORT}/index.html`);
+  console.log(`Admin password: ${ADMIN_PASSWORD}`);
 });

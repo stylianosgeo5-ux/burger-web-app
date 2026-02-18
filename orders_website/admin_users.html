@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👥 User Management - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #ff6b35;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .login-section {
+            max-width: 400px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        .login-section input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .login-section button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .badge.guest {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .badge.registered {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-edit:hover {
+            background: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .success {
+            color: #155724;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .btn-refresh {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .btn-refresh:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 User Management - Admin Panel</h1>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <h2>Admin Login</h2>
+            <p style="margin-bottom: 20px; color: #666;">Enter admin password to continue</p>
+            <input type="password" id="adminPassword" placeholder="Admin Password">
+            <button onclick="login()">Login</button>
+            <div id="loginError" class="error hidden"></div>
+        </div>
+
+        <!-- Main Content (hidden until login) -->
+        <div id="mainContent" class="hidden">
+            <button class="btn-refresh" onclick="loadUsers()">🔄 Refresh</button>
+            
+            <div id="message"></div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="totalUsers">0</h3>
+                    <p>Total Users</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="guestUsers">0</h3>
+                    <p>Guest Users</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="registeredUsers">0</h3>
+                    <p>Registered Users</p>
+                </div>
+            </div>
+
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody">
+                    <!-- Users will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Edit User</h2>
+            <input type="hidden" id="editUserId">
+            <input type="text" id="editName" placeholder="Name">
+            <input type="text" id="editPhone" placeholder="Phone">
+            <input type="email" id="editEmail" placeholder="Email">
+            <div class="modal-buttons">
+                <button class="btn-delete" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-edit" onclick="saveUser()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://burger-backend-rxwl.onrender.com';
+        let adminPassword = '';
+
+        function login() {
+            adminPassword = document.getElementById('adminPassword').value;
+            if (!adminPassword) {
+                showLoginError('Please enter admin password');
+                return;
+            }
+
+            // Try to fetch users to verify password
+            loadUsers();
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = isError ? 'error' : 'success';
+            setTimeout(() => messageDiv.textContent = '', 3000);
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/users`, {
+                    headers: {
+                        'X-Admin-Password': adminPassword
+                    }
+                });
+
+                if (response.status === 401) {
+                    showLoginError('Invalid admin password');
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Failed to load users');
+                }
+
+                const data = await response.json();
+                
+                // Show main content
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+
+                // Update stats
+                document.getElementById('totalUsers').textContent = data.total;
+                const guests = data.users.filter(u => u.isGuest).length;
+                document.getElementById('guestUsers').textContent = guests;
+                document.getElementById('registeredUsers').textContent = data.total - guests;
+
+                // Display users
+                displayUsers(data.users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showLoginError('Failed to load users');
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersBody');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name || '-'}</td>
+                    <td>${user.phone || '-'}</td>
+                    <td>${user.email || '-'}</td>
+                    <td>
+                        <span class="badge ${user.isGuest ? 'guest' : 'registered'}">
+                            ${user.isGuest ? 'Guest' : 'Registered'}
+                        </span>
+                    </td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editUser('${user.id}', '${user.name || ''}', '${user.phone || ''}', '${user.email || ''}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.name || 'User'}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editUser(id, name, phone, email) {
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editPhone').value = phone;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        async function saveUser() {
+            const id = document.getElementById('editUserId').value;
+            const name = document.getElementById('editName').value;
+            const phone = document.getElementById('editPhone').value;
+            const email = document.getElementById('editEmail').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/users/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-Admin-Password': adminPassword,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, phone, email })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to update user');
+                }
+
+                showMessage('User updated successfully');
+                closeEditModal();
+                loadUsers();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function deleteUser(id, name) {
+            if (!confirm(`Are you sure you want to delete ${name}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Admin-Password': adminPassword
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to delete user');
+                }
+
+                showMessage('User deleted successfully');
+                loadUsers();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
