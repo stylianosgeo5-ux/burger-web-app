@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AccountPage extends StatefulWidget {
   final String userName;
@@ -29,8 +31,16 @@ class _AccountPageState extends State<AccountPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _oldPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _showOldPassword = false;
+  bool _showNewPassword = false;
+  bool _showConfirmPassword = false;
+
+  static const String serverUrl = 'https://burger-backend-rxwl.onrender.com';
 
   @override
   void initState() {
@@ -45,6 +55,9 @@ class _AccountPageState extends State<AccountPage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -109,6 +122,97 @@ class _AccountPageState extends State<AccountPage> {
       _phoneController.text = widget.userPhone;
       _isEditing = false;
     });
+  }
+
+  Future<void> _changePassword() async {
+    final oldPassword = _oldPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all password fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('New password must be at least 6 characters'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('New passwords do not match'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('$serverUrl/api/auth/change-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${widget.authToken}',
+        },
+        body: json.encode({
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+        }),
+      );
+
+      setState(() => _isSaving = false);
+
+      if (response.statusCode == 200) {
+        // Clear password fields
+        _oldPasswordController.clear();
+        _newPasswordController.clear();
+        _confirmPasswordController.clear();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✓ Password changed successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        final error = json.decode(response.body)['error'] ?? 'Failed to change password';
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -300,6 +404,71 @@ class _AccountPageState extends State<AccountPage> {
                   ],
                 ),
               ],
+
+              // Security Section
+              const SizedBox(height: 40),
+              const Divider(),
+              const SizedBox(height: 20),
+              const Text(
+                'Security',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Change Password Section
+              _buildPasswordField(
+                label: 'Current Password',
+                icon: Icons.lock_outline,
+                controller: _oldPasswordController,
+                obscureText: !_showOldPassword,
+                onToggleVisibility: () => setState(() => _showOldPassword = !_showOldPassword),
+              ),
+              const SizedBox(height: 16),
+
+              _buildPasswordField(
+                label: 'New Password',
+                icon: Icons.lock,
+                controller: _newPasswordController,
+                obscureText: !_showNewPassword,
+                onToggleVisibility: () => setState(() => _showNewPassword = !_showNewPassword),
+              ),
+              const SizedBox(height: 16),
+
+              _buildPasswordField(
+                label: 'Confirm New Password',
+                icon: Icons.lock,
+                controller: _confirmPasswordController,
+                obscureText: !_showConfirmPassword,
+                onToggleVisibility: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton(
+                onPressed: _isSaving ? null : _changePassword,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Change Password',
+                        style: TextStyle(fontSize: 16),
+                      ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -349,6 +518,57 @@ class _AccountPageState extends State<AccountPage> {
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    required bool obscureText,
+    required VoidCallback onToggleVisibility,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: Colors.orange),
+            suffixIcon: IconButton(
+              icon: Icon(
+                obscureText ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey,
+              ),
+              onPressed: onToggleVisibility,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.orange, width: 2),
             ),
           ),
         ),
