@@ -1,5 +1,5 @@
 {
-  "version": "2.5.0",
-  "updateMessage": "New guest user system with auto-account creation and checkout conversion!",
+  "version": "2.6.0",
+  "updateMessage": "Guest checkout form now appears at the top - required before placing orders!",
   "releaseDate": "2026-02-18"
 }
