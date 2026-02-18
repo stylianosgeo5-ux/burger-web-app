@@ -370,6 +370,23 @@ app.patch('/api/orders/:index/confirm', (req, res) => {
     orders[index].confirmed = confirmed;
     orders[index].confirmedAt = new Date().toISOString();
     
+    // Increment discount code usage count when order is confirmed
+    if (confirmed && orders[index].discountCode) {
+      try {
+        const discountData = fs.readFileSync(DISCOUNTS_FILE, 'utf8');
+        const discounts = JSON.parse(discountData);
+        const discount = discounts.find(d => d.code.toUpperCase() === orders[index].discountCode.toUpperCase());
+        
+        if (discount) {
+          discount.usedCount = (discount.usedCount || 0) + 1;
+          fs.writeFileSync(DISCOUNTS_FILE, JSON.stringify(discounts, null, 2));
+          console.log(`Discount code ${discount.code} used count incremented to ${discount.usedCount}`);
+        }
+      } catch (error) {
+        console.error('Error updating discount usage:', error);
+      }
+    }
+    
     // Save to file
     fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
     
@@ -549,9 +566,7 @@ app.post('/api/validate-discount', (req, res) => {
       return res.json({ valid: false, message: 'Discount code limit reached' });
     }
     
-    // Increment usage count
-    discount.usedCount = (discount.usedCount || 0) + 1;
-    fs.writeFileSync(DISCOUNTS_FILE, JSON.stringify(discounts, null, 2));
+    // Don't increment usage count here - only increment when order is confirmed
     
     res.json({ 
       valid: true, 
