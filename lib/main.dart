@@ -624,7 +624,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Welcome, ${widget.userName}!',
+                widget.userName.isEmpty ? 'Welcome!' : 'Welcome, ${widget.userName}!',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
