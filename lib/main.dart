@@ -399,7 +399,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   Map<String, String> _openingHours = {};
   bool _isLoadingHours = true;
-  bool _isHoursExpanded = false;
   static const String serverUrl = 'https://burger-backend-rxwl.onrender.com';
   
   @override
@@ -519,6 +518,63 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 20),
               
+              // Opening Hours Section (Always Visible)
+              if (_isLoadingHours)
+                const Center(child: CircularProgressIndicator(color: Colors.orange))
+              else if (_openingHours.isNotEmpty) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Opening Hours',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ..._openingHours.entries.map((entry) {
+                        final day = entry.key[0].toUpperCase() + entry.key.substring(1);
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  day,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                entry.value,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+              
               // Instagram Story Promotion Banner
               Container(
                 width: double.infinity,
@@ -565,6 +621,27 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Instagram Handle
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.alternate_email,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'burgercy.com_',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -617,7 +694,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            _buildPromoStep('1', 'Tag us in your Instagram story'),
+                            _buildPromoStep('1', 'Tag @burgercy.com_ in your story'),
                             _buildPromoStep('2', 'Show your story when ordering'),
                             _buildPromoStep('3', 'Get your discount code!'),
                             const SizedBox(height: 12),
@@ -651,73 +728,9 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
-            if (_isLoadingHours)
-              const Center(child: CircularProgressIndicator(color: Colors.orange))
-            else if (_openingHours.isNotEmpty) ...[
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isHoursExpanded = !_isHoursExpanded;
-                  });
-                },
-                child: Row(
-                  children: [
-                    const Text(
-                      'Opening Hours',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    AnimatedRotation(
-                      turns: _isHoursExpanded ? 0.25 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (_isHoursExpanded) ...[
-                const SizedBox(height: 15),
-                ..._openingHours.entries.map((entry) {
-                  final day = entry.key[0].toUpperCase() + entry.key.substring(1);
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 100,
-                          child: Text(
-                            day,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          entry.value,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ],
             ],
-          ],
+          ),
         ),
-      ),
       ),
     );
   }
