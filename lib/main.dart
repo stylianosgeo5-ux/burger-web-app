@@ -246,6 +246,24 @@ class _MainNavigationControllerState extends State<MainNavigationController> {
 
   Future<void> _handleLogout() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // Delete user account from server before logging out
+    if (_userId != null && _authToken != null) {
+      try {
+        await http.delete(
+          Uri.parse('${OrdersHistory.serverUrl}/api/auth/account'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_authToken',
+          },
+        );
+        print('User account deleted from server');
+      } catch (e) {
+        print('Failed to delete account from server: $e');
+        // Continue with logout even if deletion fails
+      }
+    }
+    
     await prefs.remove('auth_token');
     await prefs.remove('user_id');
     await prefs.remove('user_name');

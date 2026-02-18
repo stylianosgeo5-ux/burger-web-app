@@ -1,5 +1,5 @@
 {
-  "version": "2.6.0",
-  "updateMessage": "Guest checkout form now appears at the top - required before placing orders!",
+  "version": "2.7.0",
+  "updateMessage": "Account data now automatically deleted on logout!",
   "releaseDate": "2026-02-18"
 }

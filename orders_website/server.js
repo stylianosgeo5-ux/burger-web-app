@@ -1316,6 +1316,40 @@ app.patch('/api/admin/users/:id', adminAuth, (req, res) => {
   }
 });
 
+// DELETE own account (User self-deletion on logout)
+app.delete('/api/auth/account', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user.id;
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Delete user
+    users.splice(userIndex, 1);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    
+    // Also delete user's cart if exists
+    try {
+      const carts = JSON.parse(fs.readFileSync(CARTS_FILE, 'utf8'));
+      const filteredCarts = carts.filter(c => c.userId !== userId);
+      fs.writeFileSync(CARTS_FILE, JSON.stringify(filteredCarts, null, 2));
+    } catch (e) {
+      console.log('No cart to delete for user:', userId);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`Dashboard available at http://localhost:${PORT}/index.html`);
